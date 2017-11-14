@@ -17,6 +17,7 @@ class TestLibTree < Minitest::Test
       @t_p = f(g(x,y),a,g(x,y))
 
       @t_subst = f(x,x,y)
+
     end
     @t_p = @m.t_p
     @t_r = @m.t_r
@@ -109,6 +110,36 @@ class TestLibTree < Minitest::Test
     assert_equal(@m.f(@m.y, @m.y, @m.b), @t_subst * s2)
     assert_equal(@m.f(@m.y, @m.y, @m.b), s2[@t_subst])
     assert_equal(@m.y, s2[@m.x])
+  end
+
+  def test_each_post_order
+    s1 = ""
+    @t.each_post_order { |e| s1 << e.symbol.to_s }
+    assert_equal("abgabhf", s1)
+    s2 = ""
+    @t_p.each_post_order { |e| s2 << e.symbol.to_s }
+    assert_equal("xygaxygf", s2)
+    en = @t.each_post_order.lazy
+    assert_equal(@m.a, en.next)
+    assert_equal(@m.b, en.next)
+  end
+
+  def test_each_pre_order
+    s1 = ""
+    @t.each_pre_order { |e| s1 << e.symbol.to_s }
+    assert_equal("fgabahb", s1)
+    s2 = ""
+    @t_p.each_pre_order { |e| s2 << e.symbol.to_s }
+    assert_equal("fgxyagxy", s2)
+  end
+
+  def test_each
+    s1 = ""
+    @t.each { |e| s1 << e.symbol.to_s }
+    assert_equal("abgabhf", s1)
+    s2 = ""
+    @t_p.each(:pre) { |e| s2 << e.symbol.to_s }
+    assert_equal("fgxyagxy", s2)
   end
 
 end

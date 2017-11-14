@@ -10,6 +10,14 @@ module LibTree
       0
     end
 
+    def constant?
+      false
+    end
+
+    def variable?
+      true
+    end
+
     def ground?
       false
     end

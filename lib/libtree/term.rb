@@ -3,6 +3,11 @@ module LibTree
   class Term
     attr_reader :children
     attr_reader :symbol
+
+    def set_symbol(s)
+      @symbol = s
+    end
+
     def initialize(symbol, *children)
       @symbol = symbol
       @children = children
@@ -21,6 +26,41 @@ module LibTree
     end
 
     alias head root
+
+    def each_post_order(&block)
+      if block_given?
+        @children.each { |c|
+          c.each_post_order(&block)
+        }
+        yield self
+        return self
+      else
+        to_enum(:each_post_order)
+      end
+    end
+
+    def each_pre_order(&block)
+      if block_given?
+        yield self
+        @children.each { |c|
+          c.each_pre_order(&block)
+        }
+        return self
+      else
+        to_enum(:each_pre_order)
+      end
+    end
+
+    def each(order = :post, &block)
+      case order
+      when :pre
+        each_pre_order(&block)
+      when :post
+        each_post_order(&block)
+      else
+        raise "Unknown traversal order: #{order}!"
+      end
+    end
 
     def dup
       children = @children.collect { |c| c.dup }
@@ -96,6 +136,14 @@ module LibTree
     end
     alias ground_term? ground?
 
+    def constant?
+      return @children.length == 0
+    end
+
+    def variable?
+      false
+    end
+
     def |(position)
       position = [position] if !position.kind_of?(Array)
       pos = position.shift
@@ -149,7 +197,7 @@ module LibTree
       pos = (0...arity).collect { |i| [i] }
       children_pos = []
       children.collect(&:variable_positions).each_with_index { |ps,i|
-        if ps == Set[] and children[i].kind_of?(Variable)
+        if ps == Set[] and children[i].variable?
           children_pos.push pos[i]
         else
           ps.each { |p|
