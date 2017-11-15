@@ -32,6 +32,20 @@ class TestAutomaton < Minitest::Test
     @t = @m.tree
     @t2 = @m.tree2
     @a = @m.automaton
+    mod2 = LibTree::define_system( alphabet: {g: 1, a: 0, b: 0}, variables: [])
+    @m2 = Module::new do
+      extend mod2
+      class << self
+        attr_reader :automaton
+      end
+      @automaton = LibTree::Automaton::new( system: mod2, states: [:q0, :q1, :q], final_states: [:q0], rules: {
+        a => :q0,
+        g(:q0) => :q1,
+        g(:q1) => :q0,
+        g(:q) => [:q0, :q1]
+      } )
+    end
+    @a2 = @m2.automaton
   end
 
   def test_automaton
@@ -41,7 +55,13 @@ class TestAutomaton < Minitest::Test
     k, v = @a.rules.reverse_each.first
     assert_equal( @m.o(:q1,:q1), k )
     assert_equal( :q1, v )
-    assert( @a.determinist? )
+    assert( @a.deterministic? )
+    assert( @a.complete? )
+    assert_equal( @a.complete, @a )
+    refute( @a2.deterministic? )
+    refute( @a2.complete? )
+    assert( @a2.complete.complete? )
+    refute_equal( @a2.complete, @a2 )
   end
 
   def test_move

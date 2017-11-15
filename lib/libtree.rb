@@ -23,6 +23,10 @@ module LibTree
         @variables.dup
       end
 
+      def self.alphabet
+        @alphabet.dup
+      end
+
       define_method(:arity) { |sym|
         m.arity(sym)
       }
@@ -35,9 +39,17 @@ module LibTree
         m.variables
       }
 
+      define_method(:alphabet) {
+        m.alphabet
+      }
+
       @alphabet.each { |name, arity|
         eval <<EOF
   def #{name}(*children)
+    raise "Invalid child number: \#{children.length}, expected #{arity}" if children.length != #{arity}
+    Term::new(#{name.inspect}, *children)
+  end
+  def self.#{name}(*children)
     raise "Invalid child number: \#{children.length}, expected #{arity}" if children.length != #{arity}
     Term::new(#{name.inspect}, *children)
   end
@@ -47,6 +59,9 @@ EOF
       @variables.each { |name|
         eval <<EOF
   def #{name}
+    Variable::new(#{name.inspect})
+  end
+  def self.#{name}
     Variable::new(#{name.inspect})
   end
 EOF

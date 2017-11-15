@@ -9,7 +9,7 @@ module LibTree
         end
 
         def ==(other)
-          self.class === other and @symbol == other.symbol and @children == other.children
+          self.class === other && @symbol == other.symbol && @children == other.children
         end
 
         alias eql? ==
@@ -46,11 +46,53 @@ module LibTree
       @order = order
     end
 
-    def determinist?
+    def ==(other)
+      self.class === other && @system == other.system && @rules == other.rules && @states == other.states && @final_states == other.final_states
+    end
+
+    alias eql? ==
+
+    def dup
+      Automaton::new( system: @system, states: @states.to_a, final_states: @final_states.to_a, rules: @rules, order: @order )
+    end
+
+    def deterministic?
       rules.each { |k,v|
         return false if v.kind_of?(Array)
       }
       true
+    end
+
+    def complete?
+      @system.alphabet.each { |sym, arity|
+        if arity > 0
+          @states.to_a.repeated_permutation(arity) { |perm|
+            return false unless rules[@system.send(sym, *perm)]
+          }
+        else
+          return false unless rules[@system.send(sym)]
+        end
+      }
+      return true
+    end
+
+    def complete!
+      return self if complete?
+      @states.add(:__dead)
+      @system.alphabet.each { |sym, arity|
+        if arity > 0
+          @states.to_a.repeated_permutation(arity) { |perm|
+            @rules[@system.send(sym, *perm)] = :__dead unless rules[@system.send(sym, *perm)]
+          }
+        else
+          @rules[@system.send(sym)] = :__dead unless rules[@system.send(sym)]
+        end
+      }
+      return self
+    end
+
+    def complete
+      dup.complete!
     end
 
   end #Automaton
