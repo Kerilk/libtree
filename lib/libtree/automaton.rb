@@ -113,15 +113,9 @@ module LibTree
         previously_marked_states = marked_states.dup
         previously_marked_rules = marked_rules.dup
         @system.alphabet.each { |sym, arity|
-          if arity > 0
-            if marked_states.size > 0
-              marked_states.to_a.repeated_permutation(arity) { |perm|
-                update_rules.call(@system.send(sym, *perm))
-              }
-            end
-          else
-            update_rules.call(@system.send(sym))
-          end
+          marked_states.to_a.repeated_permutation(arity) { |perm|
+            update_rules.call(@system.send(sym, *perm))
+          }
         }
         break if previously_marked_states == marked_states && previously_marked_rules == marked_rules
       end
