@@ -133,6 +133,55 @@ module LibTree
       self == reduce
     end
 
+    def determinize!
+      return self if deterministic?
+      new_states = Set[]
+      new_rules = RuleSet::new
+      loop do
+        previously_new_states = new_states.dup
+        previously_new_rules = new_rules.dup
+        @system.alphabet.each { |sym, arity|
+          new_states.to_a.repeated_permutation(arity) { |perm|
+            perm = perm.collect(&:to_a)
+            if perm != []
+              products = perm.first.product(*perm[1..-1])
+              products = [[]] if products == []
+            else
+              products = [[]]
+            end
+            new_state = Set[]
+            products.each { |p|
+              k = @system.send(sym, *p)
+              v = @rules[k]
+              if v
+                if v.kind_of? Array
+                  new_state.merge v
+                else
+                  new_state.add v
+                end
+              end
+            }
+            unless new_state == Set[]
+              new_states.add new_state
+              perm = perm.collect(&:to_set)
+              new_rules[@system.send(sym, *perm)] = new_state
+            end
+          }
+        }
+        break if previously_new_rules == new_rules && previously_new_states == new_states
+      end
+      @rules = new_rules
+      @states = new_states
+      new_final_states = Set[]
+      new_final_states.merge @states.select{ |s| @final_states.collect{|fs| s.include? fs }.include? true }
+      @final_states = new_final_states
+      self
+    end
+
+    def determinize
+      dup.determinize!
+    end
+
   end #Automaton
 
   class Run

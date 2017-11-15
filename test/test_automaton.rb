@@ -32,6 +32,7 @@ class TestAutomaton < Minitest::Test
     @t = @m.tree
     @t2 = @m.tree2
     @a = @m.automaton
+
     mod2 = LibTree::define_system( alphabet: {g: 1, a: 0, b: 0}, variables: [])
     @m2 = Module::new do
       extend mod2
@@ -46,6 +47,22 @@ class TestAutomaton < Minitest::Test
       } )
     end
     @a2 = @m2.automaton
+
+    mod3 = LibTree::define_system( alphabet: {f: 2, g: 1, a: 0}, variables: [])
+    @m3 = Module::new do
+      extend mod3
+      class << self
+        attr_reader :automaton
+      end
+      @automaton = LibTree::Automaton::new( system: mod2, states: [:q, :qg, :qf], final_states: [:qf], rules: {
+        a => :q,
+        g(:q) => [ :q, :qg ],
+        g(:qg) => :qf,
+        f(:q,:q) => :q
+      } )
+    end
+    @a3 = @m3.automaton
+
   end
 
   def test_automaton
@@ -66,6 +83,14 @@ class TestAutomaton < Minitest::Test
     refute( @a2.reduced? )
     assert_equal( Set[:q0, :q1], @a2.reduce.states )
     assert_equal( 3, @a2.reduce.rules.size )
+  end
+
+  def test_determinize
+    refute( @a3.deterministic? )
+    d = @a3.determinize
+    assert( d.deterministic? )
+    assert_equal( Set[ Set[:q], Set[:q, :qg], Set[:q, :qg, :qf] ], d.states )
+    assert_equal( Set[ Set[:q, :qg, :qf] ], d.final_states )
   end
 
   def test_move
