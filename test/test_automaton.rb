@@ -54,7 +54,7 @@ class TestAutomaton < Minitest::Test
       class << self
         attr_reader :automaton
       end
-      @automaton = LibTree::Automaton::new( system: mod2, states: [:q, :qg, :qf], final_states: [:qf], rules: {
+      @automaton = LibTree::Automaton::new( system: mod3, states: [:q, :qg, :qf], final_states: [:qf], rules: {
         a => :q,
         g(:q) => [ :q, :qg ],
         g(:qg) => :qf,
@@ -91,6 +91,7 @@ class TestAutomaton < Minitest::Test
     assert( d.deterministic? )
     assert_equal( Set[ Set[:q], Set[:q, :qg], Set[:q, :qg, :qf] ], d.states )
     assert_equal( Set[ Set[:q, :qg, :qf] ], d.final_states )
+    assert_equal( 13, d.rules.size )
   end
 
   def test_move
@@ -117,7 +118,6 @@ class TestAutomaton < Minitest::Test
       r.move
     }
     refute(r.successful?)
-
   end
 
   def test_run
