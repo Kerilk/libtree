@@ -5,8 +5,6 @@ module LibTree
     class RuleSet < Hash
 
       class Rule < Term
-        def hash
-        end
 
         def ==(other)
           self.class === other && @symbol == other.symbol && @children == other.children
@@ -82,10 +80,10 @@ module LibTree
       @system.alphabet.each { |sym, arity|
         if arity > 0
           @states.to_a.repeated_permutation(arity) { |perm|
-            @rules[@system.send(sym, *perm)] = :__dead unless rules[@system.send(sym, *perm)]
+            @rules[@system.send(sym, *perm)] = :__dead unless @rules[@system.send(sym, *perm)]
           }
         else
-          @rules[@system.send(sym)] = :__dead unless rules[@system.send(sym)]
+          @rules[@system.send(sym)] = :__dead unless @rules[@system.send(sym)]
         end
       }
       return self
@@ -93,6 +91,52 @@ module LibTree
 
     def complete
       dup.complete!
+    end
+
+    def reduce!
+      marked_states = Set[]
+      available_rules = @rules.dup
+      marked_rules = RuleSet::new
+      update_rules = lambda { |k|
+        v = available_rules[k]
+        if v
+          if v.kind_of? Array
+            marked_states.merge(v)
+          else
+            marked_states.add(v)
+          end
+          marked_rules[k] = v
+          available_rules.delete(k)
+        end
+      }
+      loop do
+        previously_marked_states = marked_states.dup
+        previously_marked_rules = marked_rules.dup
+        @system.alphabet.each { |sym, arity|
+          if arity > 0
+            if marked_states.size > 0
+              marked_states.to_a.repeated_permutation(arity) { |perm|
+                update_rules.call(@system.send(sym, *perm))
+              }
+            end
+          else
+            update_rules.call(@system.send(sym))
+          end
+        }
+        break if previously_marked_states == marked_states && previously_marked_rules == marked_rules
+      end
+      @rules = marked_rules
+      @states = marked_states
+      @final_states &= @states
+      self
+    end
+
+    def reduce
+      dup.reduce!
+    end
+
+    def reduced?
+      self == reduce
     end
 
   end #Automaton

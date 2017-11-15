@@ -57,11 +57,15 @@ class TestAutomaton < Minitest::Test
     assert_equal( :q1, v )
     assert( @a.deterministic? )
     assert( @a.complete? )
+    assert( @a.reduced? )
     assert_equal( @a.complete, @a )
     refute( @a2.deterministic? )
     refute( @a2.complete? )
     assert( @a2.complete.complete? )
     refute_equal( @a2.complete, @a2 )
+    refute( @a2.reduced? )
+    assert_equal( Set[:q0, :q1], @a2.reduce.states )
+    assert_equal( 3, @a2.reduce.rules.size )
   end
 
   def test_move
