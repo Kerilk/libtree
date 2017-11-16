@@ -212,6 +212,18 @@ module LibTree
     def *(substitution)
       Term::new(@symbol, *(@children.collect{ |c| c * substitution  } ))
     end
+
+    def morph(morphism)
+      if morphism.rules[@symbol]
+        t = morphism.rules[@symbol]
+        vars = morphism.variables.take(@arity)
+        s_rules = vars.zip @children.collect{ |c| c.morph(morphism) }
+        s = morphism.output_system.substitution::new( s_rules.to_h )
+        t * s
+      else
+        Term::new(@symbol, *(@children.collect{ |c| c.morph(morphism) } ))
+      end
+    end
 #    def *(substitution)
 #      t = self.dup
 #      variable_positions.each { |p|

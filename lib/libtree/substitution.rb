@@ -6,7 +6,7 @@ module LibTree
     
     def initialize(system, **rules)
       vs = rules.keys.collect.to_set
-      raise "Invalid substitution variables: #{vs - system.variables}!" if (vs - system.variables) != Set[]
+      #raise "Invalid substitution variables: #{vs - system.variables}!" if (vs - system.variables) != Set[]
       @system = system
       @rules = rules
     end
