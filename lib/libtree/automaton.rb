@@ -18,17 +18,23 @@ module LibTree
         end
 
       end #Rule
-      
+
+      def self.compute_rule(key)
+        r = Rule::new(key.symbol)
+        r.children.push *key.children.collect { |c| c.kind_of?(Term) ? c.symbol : c }
+        r
+      end
+
       def [](key)
-        super(Rule::new(key.symbol, *key.children.collect { |c| c.kind_of?(Term) ? c.symbol : c }))
+        super(RuleSet::compute_rule(key))
       end
 
       def []=(key,value)
-        super(Rule::new(key.symbol, *key.children.collect { |c| c.kind_of?(Term) ? c.symbol : c }), value)
+        super(RuleSet::compute_rule(key), value)
       end
 
       def delete(key)
-        super(Rule::new(key.symbol, *key.children.collect { |c| c.kind_of?(Term) ? c.symbol : c }))
+        super(RuleSet::compute_rule(key))
       end
 
     end #RuleSet

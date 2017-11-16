@@ -70,7 +70,7 @@ class TestAutomaton < Minitest::Test
     assert_equal( @m.zero, k )
     assert_equal( :q0, v )
     k, v = @a.rules.reverse_each.first
-    assert_equal( @m.o(:q1,:q1), k )
+    assert_equal( LibTree::Automaton::RuleSet::compute_rule(@m.o(:q1,:q1)), k )
     assert_equal( :q1, v )
     assert( @a.deterministic? )
     assert( @a.complete? )
@@ -86,12 +86,14 @@ class TestAutomaton < Minitest::Test
   end
 
   def test_determinize
+    puts @a3
     refute( @a3.deterministic? )
     d = @a3.determinize
     assert( d.deterministic? )
     assert_equal( Set[ Set[:q], Set[:q, :qg], Set[:q, :qg, :qf] ], d.states )
     assert_equal( Set[ Set[:q, :qg, :qf] ], d.final_states )
     assert_equal( 13, d.rules.size )
+    puts d
   end
 
   def test_move
