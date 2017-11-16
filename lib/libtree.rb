@@ -30,6 +30,17 @@ module LibTree
         @alphabet.dup
       end
 
+      def self.to_s
+        s = "<System: aphabet: {"
+        s << @alphabet.collect { |s,arity|
+               "#{s}" + (arity > 0 ? "(#{","*arity})" : "")
+             }.join(", ")
+        s << "}, variables: {"
+        s << @variables.to_a.join(", ")
+        s << "}>"
+        s
+      end
+
       define_method(:arity) { |sym|
         m.arity(sym)
       }

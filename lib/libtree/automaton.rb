@@ -57,7 +57,7 @@ module LibTree
   final_states: #{@final_states.to_s}
   order: #{@order}
   rules:
-    #{@rules.collect{ |k,v| "#{k} -> #{v.to_s}" }.join("\n    ")}
+    #{@rules.collect{ |k,v| "#{k} -> #{v.kind_of?(Array) ? "[#{v.join(", ")}]" : v.to_s}" }.join("\n    ")}
 >
 EOF
     end
