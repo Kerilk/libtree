@@ -1,10 +1,13 @@
 require 'set'
+require_relative 'libtree/refine_set'
 require_relative 'libtree/term'
 require_relative 'libtree/variable'
 require_relative 'libtree/substitution'
 require_relative 'libtree/automaton'
 
 module LibTree
+
+  using RefineSet
 
   def self.define_system(alphabet: , variables:)
     Module::new do |m|

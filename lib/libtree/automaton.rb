@@ -1,6 +1,7 @@
 module LibTree
 
   class Automaton
+    using RefineSet
 
     class RuleSet < Hash
 
@@ -26,6 +27,10 @@ module LibTree
         super(Rule::new(key.symbol, *key.children.collect { |c| c.kind_of?(Term) ? c.symbol : c }), value)
       end
 
+      def delete(key)
+        super(Rule::new(key.symbol, *key.children.collect { |c| c.kind_of?(Term) ? c.symbol : c }))
+      end
+
     end #RuleSet
 
     attr_reader :system
@@ -42,6 +47,19 @@ module LibTree
         @rules[k] = v
       }
       @order = order
+    end
+
+    def to_s
+      <<EOF
+<Automaton:
+  system: #{@system}
+  states: #{@states.to_s}
+  final_states: #{@final_states.to_s}
+  order: #{@order}
+  rules:
+    #{@rules.collect{ |k,v| "#{k} -> #{v.to_s}" }.join("\n    ")}
+>
+EOF
     end
 
     def ==(other)
@@ -97,24 +115,21 @@ module LibTree
       marked_states = Set[]
       available_rules = @rules.dup
       marked_rules = RuleSet::new
-      update_rules = lambda { |k|
-        v = available_rules[k]
-        if v
-          if v.kind_of? Array
-            marked_states.merge(v)
-          else
-            marked_states.add(v)
-          end
-          marked_rules[k] = v
-          available_rules.delete(k)
-        end
-      }
       loop do
         previously_marked_states = marked_states.dup
         previously_marked_rules = marked_rules.dup
         @system.alphabet.each { |sym, arity|
           marked_states.to_a.repeated_permutation(arity) { |perm|
-            update_rules.call(@system.send(sym, *perm))
+            k = @system.send(sym, *perm)
+            v = available_rules.delete(k)
+            if v
+              if v.kind_of? Array
+                marked_states.merge(v)
+              else
+                marked_states.add(v)
+              end
+              marked_rules[k] = v
+            end
           }
         }
         break if previously_marked_states == marked_states && previously_marked_rules == marked_rules
@@ -145,7 +160,6 @@ module LibTree
             perm = perm.collect(&:to_a)
             if perm != []
               products = perm.first.product(*perm[1..-1])
-              products = [[]] if products == []
             else
               products = [[]]
             end

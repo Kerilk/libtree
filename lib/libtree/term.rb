@@ -1,4 +1,5 @@
 module LibTree
+  using RefineSet
 
   class Term
     attr_reader :children
@@ -18,7 +19,7 @@ module LibTree
     end
 
     def to_s
-      "#{symbol}#{arity > 0 ? "(#{children.join(',')})" : ""}"
+      "#{symbol}#{arity > 0 ? "(#{children.collect{ |e| e.to_s}.join(',')})" : ""}"
     end
 
     def root
