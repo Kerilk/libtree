@@ -216,7 +216,7 @@ module LibTree
     def morph(morphism)
       if morphism.rules[@symbol]
         t = morphism.rules[@symbol]
-        vars = morphism.variables.take(@arity)
+        vars = morphism.variables.take(arity)
         s_rules = vars.zip @children.collect{ |c| c.morph(morphism) }
         s = morphism.output_system.substitution( rules: s_rules.to_h )
         t * s
