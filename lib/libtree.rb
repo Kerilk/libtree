@@ -14,8 +14,8 @@ module LibTree
       @alphabet = alphabet
       @variables = Set::new(variables)
 
-      def self.substitution(**rules)
-        Substitution::new(self, **rules)
+      def self.substitution(rules:)
+        Substitution::new(system: self, rules: rules)
       end
 
       def self.arity(sym)
@@ -45,8 +45,8 @@ module LibTree
         m.arity(sym)
       }
 
-      define_method(:substitution) { |**rules|
-        m.substitution(**rules)
+      define_method(:substitution) { |rules:|
+        m.substitution(rules: rules)
       }
 
       define_method(:variables) {

@@ -99,10 +99,10 @@ class TestLibTree < Minitest::Test
   end
 
   def test_substitution
-    s1 = @m.substitution(x: @m.a, y: @m.g(@m.b, @m.b))
+    s1 = @m.substitution(rules: { x: @m.a, y: @m.g(@m.b, @m.b) })
     assert( s1.ground? )
     assert_equal( Set[:x, :y], s1.domain )
-    s2 = @m.substitution(x: @m.y, y: @m.b)
+    s2 = @m.substitution(rules: { x: @m.y, y: @m.b })
     assert_equal( Set[:x, :y], s2.domain )
     refute( s2.ground? )
     assert_equal(@m.f(@m.a, @m.a, @m.g(@m.b, @m.b)), @t_subst * s1)

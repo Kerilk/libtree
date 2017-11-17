@@ -5,7 +5,7 @@ module LibTree
     attr_reader :output_system
     attr_reader :variables
     attr_reader :rules
-    def initialize(input_system:, output_system:, variables:, **rules)
+    def initialize(input_system:, output_system:, variables:, rules:)
       @input_system = input_system
       @output_system = output_system
       @variables = variables

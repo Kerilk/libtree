@@ -4,7 +4,7 @@ module LibTree
     attr_reader :system
     attr_reader :rules
     
-    def initialize(system, **rules)
+    def initialize(system:, rules:)
       vs = rules.keys.collect.to_set
       #raise "Invalid substitution variables: #{vs - system.variables}!" if (vs - system.variables) != Set[]
       @system = system

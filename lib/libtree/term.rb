@@ -218,7 +218,7 @@ module LibTree
         t = morphism.rules[@symbol]
         vars = morphism.variables.take(@arity)
         s_rules = vars.zip @children.collect{ |c| c.morph(morphism) }
-        s = morphism.output_system.substitution::new( s_rules.to_h )
+        s = morphism.output_system.substitution( rules: s_rules.to_h )
         t * s
       else
         Term::new(@symbol, *(@children.collect{ |c| c.morph(morphism) } ))
