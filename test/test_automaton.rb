@@ -86,14 +86,50 @@ class TestAutomaton < Minitest::Test
   end
 
   def test_determinize
-    puts @a3
     refute( @a3.deterministic? )
     d = @a3.determinize
     assert( d.deterministic? )
     assert_equal( Set[ Set[:q], Set[:q, :qg], Set[:q, :qg, :qf] ], d.states )
     assert_equal( Set[ Set[:q, :qg, :qf] ], d.final_states )
     assert_equal( 13, d.rules.size )
-    puts d
+  end
+
+  def test_to_s
+    assert_equal( <<EOF, @a3.to_s )
+<Automaton:
+  system: <System: aphabet: {f(,,), g(,), a}, variables: {}>
+  states: {q, qg, qf}
+  final_states: {qf}
+  order: post
+  rules:
+    a -> q
+    g(q) -> [q, qg]
+    g(qg) -> qf
+    f(q,q) -> q
+>
+EOF
+    assert_equal( <<EOF, @a3.determinize.to_s )
+<Automaton:
+  system: <System: aphabet: {f(,,), g(,), a}, variables: {}>
+  states: {{q}, {q, qg}, {q, qg, qf}}
+  final_states: {{q, qg, qf}}
+  order: post
+  rules:
+    a -> {q}
+    f({q},{q}) -> {q}
+    g({q}) -> {q, qg}
+    f({q},{q, qg}) -> {q}
+    f({q, qg},{q}) -> {q}
+    f({q, qg},{q, qg}) -> {q}
+    g({q, qg}) -> {q, qg, qf}
+    f({q},{q, qg, qf}) -> {q}
+    f({q, qg},{q, qg, qf}) -> {q}
+    f({q, qg, qf},{q}) -> {q}
+    f({q, qg, qf},{q, qg}) -> {q}
+    f({q, qg, qf},{q, qg, qf}) -> {q}
+    g({q, qg, qf}) -> {q, qg, qf}
+>
+EOF
   end
 
   def test_move
