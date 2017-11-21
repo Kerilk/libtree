@@ -34,7 +34,7 @@ module LibTree
       def self.to_s
         s = "<System: aphabet: {"
         s << @alphabet.collect { |s,arity|
-               "#{s}" + (arity > 0 ? "(#{","*arity})" : "")
+               "#{s}" + (arity > 0 ? "(#{","*(arity-1)})" : "")
              }.join(", ")
         s << "}, variables: {"
         s << @variables.to_a.join(", ")
