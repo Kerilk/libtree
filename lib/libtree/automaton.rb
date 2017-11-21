@@ -20,6 +20,7 @@ module LibTree
       end #Rule
 
       def self.compute_rule(key)
+        return key if key.kind_of?(Symbol)
         r = Rule::new(key.symbol)
         r.children.push *key.children.collect { |c| c.kind_of?(Term) ? c.symbol : c }
         r
@@ -83,6 +84,47 @@ EOF
       return self
     end
 
+    def remove_epsilon_rules!
+      e_r = epsilon_rules
+      return self if epsilon_rules.empty?
+
+      non_epsilon_rules = @rules.reject { |k, v| k.kind_of? Symbol }
+      epsilon_closures = @states.collect { |s| [s, Set[s]] }
+      loop do
+        previous_epsilon_closures = epsilon_closures.collect { |s, c| [s, c.dup] }
+        epsilon_closures.each { |s, c|
+	  c.to_a.each { |st|
+            new_state = e_r[st]
+            c.add(new_state) if new_state
+          }
+        }
+        break if previous_epsilon_closures == epsilon_closures
+      end
+      epsilon_closures = epsilon_closures.to_h
+      new_rules = RuleSet::new
+      non_epsilon_rules.each { |k, v|
+        states = epsilon_closures[v].to_a
+        states = states.first if states.size == 1
+        new_rules[k] = states
+      }
+      @rules = new_rules
+      return self
+    end
+
+    def remove_epsilon_rules
+      dup.remove_epsilon_rules!
+    end
+
+    def epsilon_rules
+      @rules.select { |k, v|
+        k.kind_of? Symbol
+      }
+    end
+
+    def epsilon_rules?
+      ! epsilon_rules.empty?
+    end
+
     def ==(other)
       self.class === other && @system == other.system && @rules == other.rules && @states == other.states && @final_states == other.final_states
     end
@@ -94,6 +136,7 @@ EOF
     end
 
     def deterministic?
+      return false if epsilon_rules?
       rules.each { |k,v|
         return false if v.kind_of?(Array)
       }
@@ -133,6 +176,7 @@ EOF
     end
 
     def reduce!
+      remove_epsilon_rules!
       marked_states = Set[]
       available_rules = @rules.dup
       marked_rules = RuleSet::new
@@ -170,6 +214,7 @@ EOF
     end
 
     def determinize!
+      remove_epsilon_rules!
       return self if deterministic?
       new_states = Set[]
       new_rules = RuleSet::new
@@ -223,7 +268,7 @@ EOF
     attr_reader :tree
 
     def initialize(automaton, tree)
-      @automaton = automaton
+      @automaton = automaton.remove_epsilon_rules
       @tree = tree.dup
       @state = @tree.each(automaton.order)
     end

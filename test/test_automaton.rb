@@ -63,6 +63,55 @@ class TestAutomaton < Minitest::Test
     end
     @a3 = @m3.automaton
 
+    mod4 = LibTree::define_system( alphabet: {cons: 2, s: 1, zero: 0, empt: 0}, variables: [])
+    @m4 = Module::new do
+      extend mod4
+      class << self
+        attr_reader :automaton
+      end
+      @automaton = LibTree::Automaton::new( system: mod4, states: [:qnat, :qlist, :qnelist], final_states: [:qnelist], rules: {
+        zero => :qnat,
+        s(:qnat) => :qnat,
+        empt => :qlist,
+        cons(:qnat, :qlist) => :qnelist,
+        :qnelist => :qlist
+      } )
+    end
+    @a4 = @m4.automaton
+  end
+
+  def test_epsilon_rules
+    assert(@a4.epsilon_rules?)
+    assert_equal( 1, @a4.epsilon_rules.size)
+    assert_equal( [:qnelist, :qlist], @a4.epsilon_rules.first)
+    refute(@a4.deterministic?)
+    assert_equal( <<EOF, @a4.remove_epsilon_rules.to_s )
+<Automaton:
+  system: <System: aphabet: {cons(,), s(), zero, empt}, variables: {}>
+  states: {qnat, qlist, qnelist}
+  final_states: {qnelist}
+  order: post
+  rules:
+    zero -> qnat
+    s(qnat) -> qnat
+    empt -> qlist
+    cons(qnat,qlist) -> [qnelist, qlist]
+>
+EOF
+    assert_equal( <<EOF,  @a4.determinize.rename_states.to_s )
+<Automaton:
+  system: <System: aphabet: {cons(,), s(), zero, empt}, variables: {}>
+  states: {qr0, qr1, qr2}
+  final_states: {qr2}
+  order: post
+  rules:
+    zero -> qr0
+    empt -> qr1
+    cons(qr0,qr1) -> qr2
+    s(qr0) -> qr0
+    cons(qr0,qr2) -> qr2
+>
+EOF
   end
 
   def test_automaton
@@ -75,6 +124,7 @@ class TestAutomaton < Minitest::Test
     assert( @a.deterministic? )
     assert( @a.complete? )
     assert( @a.reduced? )
+    refute( @a.epsilon_rules? )
     assert_equal( @a.complete, @a )
     refute( @a2.deterministic? )
     refute( @a2.complete? )
@@ -83,6 +133,7 @@ class TestAutomaton < Minitest::Test
     refute( @a2.reduced? )
     assert_equal( Set[:q0, :q1], @a2.reduce.states )
     assert_equal( 3, @a2.reduce.rules.size )
+    refute( @a2.epsilon_rules? )
   end
 
   def test_determinize
@@ -97,7 +148,7 @@ class TestAutomaton < Minitest::Test
   def test_to_s
     assert_equal( <<EOF, @a3.to_s )
 <Automaton:
-  system: <System: aphabet: {f(,,), g(,), a}, variables: {}>
+  system: <System: aphabet: {f(,), g(), a}, variables: {}>
   states: {q, qg, qf}
   final_states: {qf}
   order: post
@@ -110,7 +161,7 @@ class TestAutomaton < Minitest::Test
 EOF
     assert_equal( <<EOF, @a3.determinize.to_s )
 <Automaton:
-  system: <System: aphabet: {f(,,), g(,), a}, variables: {}>
+  system: <System: aphabet: {f(,), g(), a}, variables: {}>
   states: {{q}, {q, qg}, {q, qg, qf}}
   final_states: {{q, qg, qf}}
   order: post
@@ -132,7 +183,7 @@ EOF
 EOF
     assert_equal( <<EOF, @a3.determinize.rename_states.to_s )
 <Automaton:
-  system: <System: aphabet: {f(,,), g(,), a}, variables: {}>
+  system: <System: aphabet: {f(,), g(), a}, variables: {}>
   states: {qr0, qr1, qr2}
   final_states: {qr2}
   order: post
