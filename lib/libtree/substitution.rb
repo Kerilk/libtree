@@ -24,6 +24,10 @@ module LibTree
     end
 
     def [](term)
+      unless term.kind_of?(Term)
+        return @rules[term] if @rules[term]
+        return term
+      end
       return term * self
     end
 

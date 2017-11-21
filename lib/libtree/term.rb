@@ -210,7 +210,7 @@ module LibTree
     end
 
     def *(substitution)
-      Term::new(@symbol, *(@children.collect{ |c| c * substitution  } ))
+      Term::new(@symbol, *(@children.collect{ |c| substitution[c]  } ))
     end
 
     def morph(morphism)

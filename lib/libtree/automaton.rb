@@ -68,6 +68,21 @@ module LibTree
 EOF
     end
 
+    def rename_states
+      state_mapping = @states.each_with_index.collect{ |s,i| [s, :"qr#{i}"] }.to_h
+      new_states = Set::new(@states.collect{ |s| state_mapping[s]})
+      new_final_states = Set::new(@final_states.collect{ |s| state_mapping[s]})
+      s = @system.substitution(rules: state_mapping)
+      new_rules = RuleSet::new
+      @rules.each { |k, v|
+        new_rules[s[k]] = state_mapping[v] ? state_mapping[v] : v
+      }
+      @states = new_states
+      @final_states = new_final_states
+      @rules = new_rules
+      return self
+    end
+
     def ==(other)
       self.class === other && @system == other.system && @rules == other.rules && @states == other.states && @final_states == other.final_states
     end

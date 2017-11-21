@@ -130,6 +130,28 @@ EOF
     g({q, qg, qf}) -> {q, qg, qf}
 >
 EOF
+    assert_equal( <<EOF, @a3.determinize.rename_states.to_s )
+<Automaton:
+  system: <System: aphabet: {f(,,), g(,), a}, variables: {}>
+  states: {qr0, qr1, qr2}
+  final_states: {qr2}
+  order: post
+  rules:
+    a -> qr0
+    f(qr0,qr0) -> qr0
+    g(qr0) -> qr1
+    f(qr0,qr1) -> qr0
+    f(qr1,qr0) -> qr0
+    f(qr1,qr1) -> qr0
+    g(qr1) -> qr2
+    f(qr0,qr2) -> qr0
+    f(qr1,qr2) -> qr0
+    f(qr2,qr0) -> qr0
+    f(qr2,qr1) -> qr0
+    f(qr2,qr2) -> qr0
+    g(qr2) -> qr2
+>
+EOF
   end
 
   def test_move
