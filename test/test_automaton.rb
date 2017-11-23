@@ -78,6 +78,28 @@ class TestAutomaton < Minitest::Test
       } )
     end
     @a4 = @m4.automaton
+
+    mod5 = LibTree::define_system( alphabet: {f: 1, g: 1, a: 0}, variables: [])
+    @m5 = Module::new do
+      extend mod5
+      class << self
+        attr_reader :automaton
+      end
+      @automaton = LibTree::Automaton::new( system: mod5, states: [:q0, :q1, :q2, :q3, :q4], final_states: [:q2, :q3], rules: {
+        a => :q0,
+        f(:q0) => :q1,
+        g(:q0) => :q3,
+        f(:q1) => :q1,
+        g(:q1) => :q2,
+        f(:q2) => :q4,
+        g(:q2) => :q4,
+        f(:q3) => :q4,
+        g(:q3) => :q4,
+        f(:q4) => :q4,
+        g(:q4) => :q4
+      } )
+    end
+    @a5 = @m5.automaton
   end
 
   def test_epsilon_rules
@@ -143,6 +165,28 @@ EOF
     assert_equal( Set[ Set[:q], Set[:q, :qg], Set[:q, :qg, :qf] ], d.states )
     assert_equal( Set[ Set[:q, :qg, :qf] ], d.final_states )
     assert_equal( 13, d.rules.size )
+  end
+
+  def test_minimize
+    assert( @a5.deterministic? )
+    assert( @a5.complete? )
+    assert( @a5.reduced? )
+    assert_equal( <<EOF, @a5.minimize.to_s )
+<Automaton:
+  system: <System: aphabet: {f(), g(), a}, variables: {}>
+  states: {{q3, q2}, {q0, q1}, {q4}}
+  final_states: {{q3, q2}}
+  order: post
+  rules:
+    f({q3, q2}) -> {q4}
+    f({q0, q1}) -> {q0, q1}
+    f({q4}) -> {q4}
+    g({q3, q2}) -> {q4}
+    g({q0, q1}) -> {q3, q2}
+    g({q4}) -> {q4}
+    a -> {q0, q1}
+>
+EOF
   end
 
   def test_to_s

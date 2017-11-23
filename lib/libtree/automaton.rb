@@ -3,6 +3,24 @@ module LibTree
   class Automaton
     using RefineSet
 
+    class Equivalence < Set
+
+      def equivalent?(s1, s2)
+        self.each { |subset|
+          return false if subset.include?(s1) && !subset.include?(s2)
+        }
+        true
+      end
+
+      def equivalence(s)
+        self.each { |subset|
+          return subset if subset.include?(s)
+        }
+        nil
+      end
+
+    end
+
     class RuleSet < Hash
 
       class Rule < Term
@@ -260,6 +278,75 @@ EOF
 
     def determinize
       dup.determinize!
+    end
+
+    def minimize!
+      reduce!
+      determinize!
+      complete!
+      equivalence = Equivalence[ @final_states.dup, @states - @final_states ]
+      loop do
+        previous_equivalence = equivalence
+        equivalence = Equivalence[]
+        previous_equivalence.each { |e|
+          e_prime = e.dup
+          while e_prime.size > 0 do
+            s = e_prime.first
+            eq_state = Set[s]
+            sub_e = e_prime - eq_state
+            sub_e.each { |s2|
+              equivalent = true
+              @system.alphabet.select{ |sym, arity| arity > 0}.each { |sym, arity|
+                @states.to_a.repeated_permutation(arity - 1).each { |perm|
+                  (0..(arity-1)).each { |pos|
+                    new_perm1 = perm.dup.insert(pos, s)
+                    new_perm2 = perm.dup.insert(pos, s2)
+                    q1 = @rules[@system.send(sym, *new_perm1)]
+                    q2 = @rules[@system.send(sym, *new_perm2)]
+                    if !previous_equivalence.equivalent?(q1, q2)
+                      equivalent = false
+                      break
+                    end
+                  }
+                  break unless equivalent
+                }
+                break unless equivalent
+              }
+              eq_state.add(s2) if equivalent
+            }
+            e_prime -= eq_state
+            equivalence.add eq_state
+          end
+        }
+        break if previous_equivalence == equivalence
+      end
+      new_states = Set[ *equivalence.to_a ]
+      new_final_states = Set[]
+      new_states.each { |set|
+        final = false
+        set.each { |s|
+          if @final_states.include?(s)
+            final = true
+            break
+          end
+        }
+        new_final_states.add(set) if final
+      }
+      new_rules = RuleSet::new
+      @system.alphabet.each { |sym, arity|
+         new_states.to_a.repeated_permutation(arity).each { |perm|
+           old_state = @rules[@system.send(sym, *perm.collect{|e| e.first})]
+           new_rules[@system.send(sym, *perm)] = equivalence.equivalence( old_state )
+         }
+      }
+      @states = new_states
+      @final_states = new_final_states
+      @rules = new_rules
+      self
+    end
+
+    def minimize
+      dup.minimize!
     end
 
   end #Automaton
