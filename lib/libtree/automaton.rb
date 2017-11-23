@@ -102,6 +102,30 @@ EOF
       return self
     end
 
+    def union(other)
+      raise "Systems are different! #{@system} != #{other.system}!" if @system != other.system
+      automaton1 = self.determinize.complete.rename_states("qr1_")
+      automaton2 = other.determinize.complete.rename_states("qr2_")
+      s1 = automaton1.states.to_a
+      s2 = automaton2.states.to_a
+      fs1 = automaton1.final_states.to_a
+      fs2 = automaton2.final_states.to_a
+      new_states = s1.product( s2 ).to_set
+      new_final_states = fs1.product( s2 ).to_set | s1.product( fs2 ).to_set
+      new_rules = RuleSet::new
+      @system.alphabet.each { |sym, arity|
+         new_states.to_a.repeated_permutation(arity).each { |perm|
+           os1 = automaton1.rules[@system.send(sym, *perm.collect{|e| e.first})]
+           os2 = automaton2.rules[@system.send(sym, *perm.collect{|e| e.last })]
+           new_rules[@system.send(sym, *perm.collect(&:to_set))] = Set[os1, os2]
+         }
+      }
+      new_states = new_states.collect(&:to_set).to_set
+      new_final_states = new_final_states.collect(&:to_set).to_set
+      Automaton::new(system: @system, states: new_states, final_states: new_final_states, rules: new_rules)
+    end
+    alias | union
+
     def remove_epsilon_rules!
       e_r = epsilon_rules
       return self if epsilon_rules.empty?
