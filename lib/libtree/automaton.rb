@@ -126,6 +126,18 @@ EOF
     end
     alias | union
 
+    def complement
+      return determinize.complement unless deterministic?
+      return complete.complement unless complete?
+      Automaton::new(system: @system, states: @states, final_states: @states - @final_states, rules: @rules)
+    end
+    alias ~ complement
+
+    def intersection(other)
+      ~(complement | ~other)
+    end
+    alias & intersection
+
     def remove_epsilon_rules!
       e_r = epsilon_rules
       return self if epsilon_rules.empty?

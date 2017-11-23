@@ -214,6 +214,56 @@ EOF
 EOF
   end
 
+  def test_complement
+    new_a = ~@a
+    assert_equal( <<EOF, new_a.to_s)
+<Automaton:
+  system: <System: aphabet: {o(,), a(,), n(), one, zero}, variables: {}>
+  states: {q0, q1}
+  final_states: {q0}
+  order: post
+  rules:
+    zero -> q0
+    one -> q1
+    n(q0) -> q1
+    n(q1) -> q0
+    a(q0,q0) -> q0
+    a(q1,q0) -> q0
+    a(q0,q1) -> q0
+    a(q1,q1) -> q1
+    o(q0,q0) -> q0
+    o(q1,q0) -> q1
+    o(q0,q1) -> q1
+    o(q1,q1) -> q1
+>
+EOF
+  end
+
+  def test_intersection
+    new_a = @a & @a
+    assert_equal( <<EOF,  new_a.minimize.rename_states.to_s)
+<Automaton:
+  system: <System: aphabet: {o(,), a(,), n(), one, zero}, variables: {}>
+  states: {qr0, qr1}
+  final_states: {qr0}
+  order: post
+  rules:
+    o(qr0,qr0) -> qr0
+    o(qr0,qr1) -> qr0
+    o(qr1,qr0) -> qr0
+    o(qr1,qr1) -> qr1
+    a(qr0,qr0) -> qr0
+    a(qr0,qr1) -> qr1
+    a(qr1,qr0) -> qr1
+    a(qr1,qr1) -> qr1
+    n(qr0) -> qr1
+    n(qr1) -> qr0
+    one -> qr0
+    zero -> qr1
+>
+EOF
+  end
+
   def test_to_s
     assert_equal( <<EOF, @a3.to_s )
 <Automaton:
