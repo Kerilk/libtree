@@ -295,23 +295,22 @@ EOF
             eq_state = Set[s]
             sub_e = e_prime - eq_state
             sub_e.each { |s2|
-              equivalent = true
-              @system.alphabet.select{ |sym, arity| arity > 0}.each { |sym, arity|
-                @states.to_a.repeated_permutation(arity - 1).each { |perm|
-                  (0..(arity-1)).each { |pos|
-                    new_perm1 = perm.dup.insert(pos, s)
-                    new_perm2 = perm.dup.insert(pos, s2)
-                    q1 = @rules[@system.send(sym, *new_perm1)]
-                    q2 = @rules[@system.send(sym, *new_perm2)]
-                    if !previous_equivalence.equivalent?(q1, q2)
-                      equivalent = false
-                      break
-                    end
+              equivalent = catch( :found ) do
+                @system.alphabet.select{ |sym, arity| arity > 0}.each { |sym, arity|
+                  @states.to_a.repeated_permutation(arity - 1).each { |perm|
+                    (0..(arity-1)).each { |pos|
+                      new_perm1 = perm.dup.insert(pos, s)
+                      new_perm2 = perm.dup.insert(pos, s2)
+                      q1 = @rules[@system.send(sym, *new_perm1)]
+                      q2 = @rules[@system.send(sym, *new_perm2)]
+                      if !previous_equivalence.equivalent?(q1, q2)
+                        throw :found, false
+                      end
+                    }
                   }
-                  break unless equivalent
                 }
-                break unless equivalent
-              }
+                true
+              end
               eq_state.add(s2) if equivalent
             }
             e_prime -= eq_state
