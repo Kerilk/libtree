@@ -143,11 +143,13 @@ EOF
     k, v = @a.rules.reverse_each.first
     assert_equal( LibTree::Automaton::RuleSet::compute_rule(@m.o(:q1,:q1)), k )
     assert_equal( :q1, v )
+    assert_equal( 44, @a.size )
     assert( @a.deterministic? )
     assert( @a.complete? )
     assert( @a.reduced? )
     refute( @a.epsilon_rules? )
     assert_equal( @a.complete, @a )
+    assert( 17, @a2.size )
     refute( @a2.deterministic? )
     refute( @a2.complete? )
     assert( @a2.complete.complete? )

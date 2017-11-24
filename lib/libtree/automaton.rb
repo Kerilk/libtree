@@ -35,6 +35,10 @@ module LibTree
           @symbol.hash ^ @children.hash
         end
 
+        def size
+          arity + 2
+        end
+
       end #Rule
 
       def self.compute_rule(key)
@@ -54,6 +58,10 @@ module LibTree
 
       def delete(key)
         super(RuleSet::compute_rule(key))
+      end
+
+      def rules_size
+        collect { |k,v| k.size * ( v.kind_of?(Array) ? v.size : 1 ) }.inject(&:+)
       end
 
     end #RuleSet
@@ -85,6 +93,10 @@ module LibTree
     #{@rules.collect{ |k,v| "#{k} -> #{v.kind_of?(Array) ? "[#{v.join(", ")}]" : v.to_s}" }.join("\n    ")}
 >
 EOF
+    end
+
+    def size
+      @states.size + @rules.rules_size
     end
 
     def rename_states(prefix = "qr")
