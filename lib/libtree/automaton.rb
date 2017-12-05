@@ -126,11 +126,11 @@ EOF
       new_final_states = fs1.product( s2 ).to_set | s1.product( fs2 ).to_set
       new_rules = RuleSet::new
       @system.alphabet.each { |sym, arity|
-         new_states.to_a.repeated_permutation(arity).each { |perm|
-           os1 = automaton1.rules[@system.send(sym, *perm.collect{|e| e.first})]
-           os2 = automaton2.rules[@system.send(sym, *perm.collect{|e| e.last })]
-           new_rules[@system.send(sym, *perm.collect(&:to_set))] = Set[os1, os2]
-         }
+        new_states.to_a.repeated_permutation(arity).each { |perm|
+          os1 = automaton1.rules[@system.send(sym, *perm.collect{|e| e.first})]
+          os2 = automaton2.rules[@system.send(sym, *perm.collect{|e| e.last })]
+          new_rules[@system.send(sym, *perm.collect(&:to_set))] = Set[os1, os2]
+        }
       }
       new_states = new_states.collect(&:to_set).to_set
       new_final_states = new_final_states.collect(&:to_set).to_set
