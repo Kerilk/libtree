@@ -10,10 +10,11 @@ module LibTree
 
   using RefineSet
 
-  def self.define_system(alphabet: , variables:)
+  def self.define_system(alphabet: , variables:, states: nil)
     Module::new do |m|
       @alphabet = alphabet
       @variables = Set::new(variables)
+      @states = states
 
       def self.substitution(rules:)
         Substitution::new(system: self, rules: rules)
@@ -31,6 +32,10 @@ module LibTree
         @alphabet.dup
       end
 
+      def self.states
+        @states.dup
+      end
+
       def self.to_s
         s = "<System: aphabet: {"
         s << @alphabet.collect { |s,arity|
@@ -38,6 +43,10 @@ module LibTree
              }.join(", ")
         s << "}, variables: {"
         s << @variables.to_a.join(", ")
+        if @states
+          s << "}, states: {"
+          s << @states.to_a.join(", ")
+        end
         s << "}>"
         s
       end
@@ -56,6 +65,10 @@ module LibTree
 
       define_method(:alphabet) {
         m.alphabet
+      }
+
+      define_method(:states) {
+        m.states
       }
 
       @alphabet.each { |name, arity|
@@ -81,6 +94,17 @@ EOF
   end
 EOF
       }
+
+      @states.each { |name|
+        eval <<EOF
+  def #{name}(*children)
+    Term::new(#{name.inspect}, *children)
+  end
+  def self.#{name}(*children)
+    Term::new(#{name.inspect}, *children)
+  end
+EOF
+      } if @states
     end
   end 
 

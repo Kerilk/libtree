@@ -100,6 +100,73 @@ class TestAutomaton < Minitest::Test
       } )
     end
     @a5 = @m5.automaton
+
+    mod6 = LibTree::define_system( alphabet: {one: 1, zero: 1, nill: 0}, variables: [], states: [:q0, :q1, :q2])
+    @m6 = Module::new do
+      extend mod6
+      class << self
+        attr_reader :automaton, :tree_true, :tree_false
+      end
+      @automaton = LibTree::TopDownAutomaton::new( system: mod6, states: [:q0, :q1, :q2], initial_states: [:q0], rules: {
+        q0(nill) => nill,
+        q0(zero(:x)) => zero(q0()),
+        q0( one(:x)) =>  one(q1()),
+        q1(zero(:x)) => zero(q2()),
+        q1( one(:x)) =>  one(q0()),
+        q2(zero(:x)) => zero(q1()),
+        q2( one(:x)) =>  one(q2())
+      } )
+      @tree_true = one(one(zero(nill)))
+      @tree_false = one(zero(nill))
+    end
+    @a6 = @m6.automaton
+    @t6t = @m6.tree_true
+    @t6f = @m6.tree_false
+  end
+
+  def test_top_down_automaton
+    assert_equal( <<EOF, @a6.to_s )
+<Automaton:
+  system: <System: aphabet: {one(), zero(), nill}, variables: {}, states: {q0, q1, q2}>
+  states: {q0, q1, q2}
+  initial_states: {q0}
+  order: pre
+  rules:
+    q0(nill) -> nill
+    q0(zero) -> zero(q0)
+    q0(one) -> one(q1)
+    q1(zero) -> zero(q2)
+    q1(one) -> one(q0)
+    q2(zero) -> zero(q1)
+    q2(one) -> one(q2)
+     -> [q0]
+>
+EOF
+    r1 = @a6.run @t6t
+    assert_equal( "q0(one(one(zero(nill))))", r1.tree.to_s )
+    r1.move
+    assert_equal( "one(q1(one(zero(nill))))", r1.tree.to_s )
+    r1.move
+    assert_equal( "one(one(q0(zero(nill))))", r1.tree.to_s )
+    r1.move
+    assert_equal( "one(one(zero(q0(nill))))", r1.tree.to_s )
+    r1.move
+    assert_equal( "one(one(zero(nill)))", r1.tree.to_s )
+    assert_raises( StopIteration ) { r1.move }
+    r1 = @a6.run @t6t
+    assert( r1.run )
+    assert_equal( "one(one(zero(nill)))", r1.tree.to_s )
+
+    r2 = @a6.run @t6f
+    assert_equal( "q0(one(zero(nill)))", r2.tree.to_s )
+    r2.move
+    assert_equal( "one(q1(zero(nill)))", r2.tree.to_s )
+    r2.move
+    assert_equal( "one(zero(q2(nill)))", r2.tree.to_s )
+    assert_raises( StopIteration ) { r2.move }
+    r2 = @a6.run @t6f
+    refute( r2.run )
+    assert_equal( "one(zero(q2(nill)))", r2.tree.to_s )
   end
 
   def test_epsilon_rules
@@ -327,7 +394,7 @@ EOF
   end
 
   def test_move
-    r = LibTree::Run::new(@a, @t)
+    r = @a.run @t
     r.move
     assert_equal( "a(n(o(q0,one)),o(one,n(zero)))" , r.tree.to_s)
     r.move
@@ -353,7 +420,7 @@ EOF
   end
 
   def test_move_no_rewrite
-    r = LibTree::Run::new(@a, @t, rewrite: false)
+    r = @a.run @t, rewrite: false
     r.move
     assert_equal( "a(n(o(q0(zero),one)),o(one,n(zero)))" , r.tree.to_s)
     r.move
@@ -379,19 +446,19 @@ EOF
   end
 
   def test_run
-    r = LibTree::Run::new(@a, @t)
+    r = @a.run @t
     refute(r.run)
     assert_equal( "q0(q0(q1(q0,q1)),q1(q1,q1(q0)))" , r.tree.to_s)
     refute(r.successful?)
-    r2 = LibTree::Run::new(@a, @t2)
+    r2 = @a.run @t2
     assert(r2.run)
     assert_equal( "q1(q1(q0(q1(q0,q1))),q1(q1,q1(q0)))" , r2.tree.to_s)
     assert(r2.successful?)
-    r = LibTree::Run::new(@a, @t, rewrite: false)
+    r = @a.run @t, rewrite: false
     refute(r.run)
     assert_equal( "q0(a(n(o(zero,one)),o(one,n(zero))))" , r.tree.to_s)
     refute(r.successful?)
-    r2 = LibTree::Run::new(@a, @t2, rewrite: false)
+    r2 = @a.run @t2, rewrite: false
     assert(r2.run)
     assert_equal( "q1(a(n(n(o(zero,one))),o(one,n(zero))))" , r2.tree.to_s)
     assert(r2.successful?)

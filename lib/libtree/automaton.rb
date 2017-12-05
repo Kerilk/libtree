@@ -50,15 +50,15 @@ module LibTree
       end
 
       def [](key)
-        super(RuleSet::compute_rule(key))
+        super(self.class::compute_rule(key))
       end
 
       def []=(key,value)
-        super(RuleSet::compute_rule(key), value)
+        super(self.class::compute_rule(key), value)
       end
 
       def delete(key)
-        super(RuleSet::compute_rule(key))
+        super(self.class::compute_rule(key))
       end
 
       def rules_size
@@ -85,12 +85,48 @@ module LibTree
 
     end #RuleSet
 
+    class Run
+      attr_reader :tree
+
+      def initialize(automaton, tree, rewrite: true)
+        @automaton = automaton.remove_epsilon_rules
+        @tree = tree.dup
+        @state = @tree.each(automaton.order)
+        @rewrite = rewrite
+      end
+
+      def move
+        node = @state.next
+        @automaton.rules.apply(node, @rewrite)
+        return self
+      end
+
+      def successful?
+        @automaton.final_states.include?(@tree.root)
+      end
+
+      def run
+        begin
+          loop do
+            move
+          end
+        rescue StopIteration
+        end
+        successful?
+      end
+
+    end
+
     attr_reader :system
     attr_reader :rules
     attr_reader :states
     attr_reader :final_states
-    attr_reader :order
-    def initialize( system:, states:, final_states:, rules:, order: :post)
+    @order = :post
+    def self.order
+      @order
+    end
+
+    def initialize( system:, states:, final_states:, rules:)
       @system = system
       @states = Set[*states]
       @final_states = Set[*final_states]
@@ -98,7 +134,10 @@ module LibTree
       rules.each { |k, v|
         @rules[k] = v
       }
-      @order = order
+    end
+
+    def order
+      self.class.order
     end
 
     def to_s
@@ -107,11 +146,15 @@ module LibTree
   system: #{@system}
   states: #{@states.to_s}
   final_states: #{@final_states.to_s}
-  order: #{@order}
+  order: #{order}
   rules:
     #{@rules.collect{ |k,v| "#{k} -> #{v.kind_of?(Array) ? "[#{v.join(", ")}]" : v.to_s}" }.join("\n    ")}
 >
 EOF
+    end
+
+    def run(tree, rewrite: true)
+      Run::new(self, tree, rewrite: rewrite)
     end
 
     def size
@@ -217,7 +260,7 @@ EOF
     alias eql? ==
 
     def dup
-      Automaton::new( system: @system, states: @states.to_a, final_states: @final_states.to_a, rules: @rules, order: @order )
+      self.class::new( system: @system, states: @states.to_a, final_states: @final_states.to_a, rules: @rules )
     end
 
     def deterministic?
@@ -417,34 +460,80 @@ EOF
 
   end #Automaton
 
-  class Run
-    attr_reader :tree
+  class TopDownAutomaton < Automaton
+    using RefineSet
 
-    def initialize(automaton, tree, rewrite: true)
-      @automaton = automaton.remove_epsilon_rules
-      @tree = tree.dup
-      @state = @tree.each(automaton.order)
-      @rewrite = rewrite
-    end
+    class TopDownRuleSet < RuleSet
 
-    def move
-      node = @state.next
-      @automaton.rules.apply(node, @rewrite)
-      return self
-    end
-
-    def successful?
-      @automaton.final_states.include?(@tree.root)
-    end
-
-    def run
-      begin
-        loop do
-          move
-        end
-      rescue StopIteration
+      def self.compute_rule(key)
+        return key if key.nil?
+        super
       end
-      successful?
+
+      def apply(node, rewrite = true)
+        s = self[node]
+        if s
+          s = s.sample if s.kind_of?(Array)
+          node.set_symbol s.symbol
+          node.children.replace node.children.first.children.each_with_index.collect { |c, i|
+            node.class::new( s.children[i].symbol, c )
+          }
+        else
+          raise StopIteration
+        end
+        self
+      end
+
+    end
+
+    class TopDownRun < Run
+
+      def initialize(automaton, tree, rewrite: true)
+        @automaton = automaton
+        initial = @automaton.rules[nil].sample
+        @initial_tree = tree.dup
+        @tree = tree.class::new(initial, tree.dup)
+        @state = @tree.each(automaton.order)
+        @rewrite = rewrite
+      end
+
+      def successful?
+        @tree == @initial_tree
+      end
+
+    end
+
+    @order = :pre
+
+    undef_method :final_states
+    attr_reader :initial_states
+
+    def initialize( system:, states:, initial_states:, rules:)
+      @system = system
+      @states = Set[*states]
+      @initial_states = Set[*initial_states]
+      @rules =  TopDownRuleSet::new
+      rules.each { |k, v|
+        @rules[k] = v
+      }
+      @rules[nil] = @initial_states.to_a
+    end
+
+    def to_s
+      <<EOF
+<Automaton:
+  system: #{@system}
+  states: #{@states.to_s}
+  initial_states: #{@initial_states.to_s}
+  order: #{order}
+  rules:
+    #{@rules.collect{ |k,v| "#{k} -> #{v.kind_of?(Array) ? "[#{v.join(", ")}]" : v.to_s}" }.join("\n    ")}
+>
+EOF
+    end
+
+    def run(tree, rewrite: true)
+      TopDownRun::new(self, tree, rewrite: rewrite)
     end
 
   end
