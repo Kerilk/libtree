@@ -352,6 +352,32 @@ EOF
     refute(r.successful?)
   end
 
+  def test_move_no_rewrite
+    r = LibTree::Run::new(@a, @t, rewrite: false)
+    r.move
+    assert_equal( "a(n(o(q0(zero),one)),o(one,n(zero)))" , r.tree.to_s)
+    r.move
+    assert_equal( "a(n(o(q0(zero),q1(one))),o(one,n(zero)))" , r.tree.to_s)
+    r.move
+    assert_equal( "a(n(q1(o(zero,one))),o(one,n(zero)))" , r.tree.to_s)
+    r.move
+    assert_equal( "a(q0(n(o(zero,one))),o(one,n(zero)))" , r.tree.to_s)
+    r.move
+    assert_equal( "a(q0(n(o(zero,one))),o(q1(one),n(zero)))" , r.tree.to_s)
+    r.move
+    assert_equal( "a(q0(n(o(zero,one))),o(q1(one),n(q0(zero))))" , r.tree.to_s)
+    r.move
+    assert_equal( "a(q0(n(o(zero,one))),o(q1(one),q1(n(zero))))" , r.tree.to_s)
+    r.move
+    assert_equal( "a(q0(n(o(zero,one))),q1(o(one,n(zero))))" , r.tree.to_s)
+    r.move
+    assert_equal( "q0(a(n(o(zero,one)),o(one,n(zero))))" , r.tree.to_s)
+    assert_raises( StopIteration ) {
+      r.move
+    }
+    refute(r.successful?)
+  end
+
   def test_run
     r = LibTree::Run::new(@a, @t)
     refute(r.run)
@@ -360,6 +386,14 @@ EOF
     r2 = LibTree::Run::new(@a, @t2)
     assert(r2.run)
     assert_equal( "q1(q1(q0(q1(q0,q1))),q1(q1,q1(q0)))" , r2.tree.to_s)
+    assert(r2.successful?)
+    r = LibTree::Run::new(@a, @t, rewrite: false)
+    refute(r.run)
+    assert_equal( "q0(a(n(o(zero,one)),o(one,n(zero))))" , r.tree.to_s)
+    refute(r.successful?)
+    r2 = LibTree::Run::new(@a, @t2, rewrite: false)
+    assert(r2.run)
+    assert_equal( "q1(a(n(n(o(zero,one))),o(one,n(zero))))" , r2.tree.to_s)
     assert(r2.successful?)
   end
 

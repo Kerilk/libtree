@@ -21,6 +21,7 @@ module LibTree
 
     end
 
+    # Ground rewrite rule set
     class RuleSet < Hash
 
       class Rule < Term
@@ -62,6 +63,24 @@ module LibTree
 
       def rules_size
         collect { |k,v| k.size * ( v.kind_of?(Array) ? v.size : 1 ) }.inject(&:+)
+      end
+
+      def apply(node, rewrite = true)
+        s = self[node]
+        if s
+          s = s.sample if s.kind_of?(Array)
+          if rewrite
+            node.set_symbol s
+          else
+            new_node = node.class::new(node.symbol, *node.children)
+            node.set_symbol s
+            if node.arity > 0
+              new_node.children.collect! { |c| c.children.first }
+            end
+            node.children.replace [new_node]
+          end
+        end
+        self
       end
 
     end #RuleSet
@@ -106,7 +125,7 @@ EOF
       s = @system.substitution(rules: state_mapping)
       new_rules = RuleSet::new
       @rules.each { |k, v|
-        new_rules[s[k]] = state_mapping[v] ? state_mapping[v] : v
+        new_rules[s[k]] = s[v]
       }
       @states = new_states
       @final_states = new_final_states
@@ -401,22 +420,16 @@ EOF
   class Run
     attr_reader :tree
 
-    def initialize(automaton, tree)
+    def initialize(automaton, tree, rewrite: true)
       @automaton = automaton.remove_epsilon_rules
       @tree = tree.dup
       @state = @tree.each(automaton.order)
+      @rewrite = rewrite
     end
 
     def move
       node = @state.next
-      s = @automaton.rules[node]
-      if s
-        if s.kind_of?(Array)
-          node.set_symbol s.sample
-        else
-          node.set_symbol s
-        end
-      end
+      @automaton.rules.apply(node, @rewrite)
       return self
     end
 
