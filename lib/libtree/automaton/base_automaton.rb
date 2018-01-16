@@ -26,16 +26,6 @@ module LibTree
 
       class Rule < Term
 
-        def ==(other)
-          self.class === other && @symbol == other.symbol && @children == other.children
-        end
-
-        alias eql? ==
-
-        def hash
-          @symbol.hash ^ @children.hash
-        end
-
         def size
           arity + 2
         end

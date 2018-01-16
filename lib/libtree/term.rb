@@ -70,11 +70,13 @@ module LibTree
     end
 
     def ==(other)
-      return false unless @symbol == other.symbol && @children.length == other.children.length
-      @children.each_with_index { |c,i|
-        return false unless c == other.children[i]
-      }
-      return true
+      self.class === other && @symbol == other.symbol && @children == other.children
+    end
+
+    alias eql? ==
+
+    def hash
+      @symbol.hash ^ @children.hash
     end
 
     def >=( other )
