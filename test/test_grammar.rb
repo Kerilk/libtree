@@ -17,7 +17,7 @@ class TestGrammar < Minitest::Test
 
       @grammar = LibTree::Grammar::new( axiom: list, non_terminals: non_terminals , terminals: terminals, rules: {
         list => [ void, cons(nat, list)],
-        nat => [ 0, s(nat) ]
+        nat => [ zero, s(nat) ]
       } )
     end
 
@@ -33,9 +33,12 @@ class TestGrammar < Minitest::Test
   terminals: <System: aphabet: {zero, void, s(), cons(,)}>
   rules:
     list -> [void, cons(nat,list)]
-    nat -> [0, s(nat)]
+    nat -> [zero, s(nat)]
 >
 EOF
+    assert( @g.regular? )
+    d = @g.derivation
+    assert( d.derivation, LibTree::Term )
   end
 
 end

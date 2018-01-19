@@ -54,6 +54,10 @@ module LibTree
         s
       end
 
+      def self.each(*args, &block)
+        @alphabet.each(*args, &block)
+      end
+
       define_method(:arity) { |sym|
         m.arity(sym)
       }
