@@ -127,7 +127,7 @@ class TestAutomaton < Minitest::Test
   def test_top_down_automaton
     assert_equal( <<EOF, @a6.to_s )
 <Automaton:
-  system: <System: aphabet: {one(), zero(), nill}, variables: {}, states: {q0, q1, q2}>
+  system: <System: aphabet: {one(), zero(), nill}, states: {q0, q1, q2}>
   states: {q0, q1, q2}
   initial_states: {q0}
   order: pre
@@ -176,7 +176,7 @@ EOF
     refute(@a4.deterministic?)
     assert_equal( <<EOF, @a4.remove_epsilon_rules.to_s )
 <Automaton:
-  system: <System: aphabet: {cons(,), s(), zero, empt}, variables: {}>
+  system: <System: aphabet: {cons(,), s(), zero, empt}>
   states: {qnat, qlist, qnelist}
   final_states: {qnelist}
   order: post
@@ -189,7 +189,7 @@ EOF
 EOF
     assert_equal( <<EOF,  @a4.determinize.rename_states.to_s )
 <Automaton:
-  system: <System: aphabet: {cons(,), s(), zero, empt}, variables: {}>
+  system: <System: aphabet: {cons(,), s(), zero, empt}>
   states: {qr0, qr1, qr2}
   final_states: {qr2}
   order: post
@@ -242,7 +242,7 @@ EOF
     assert( @a5.reduced? )
     assert_equal( <<EOF, @a5.minimize.to_s )
 <Automaton:
-  system: <System: aphabet: {f(), g(), a}, variables: {}>
+  system: <System: aphabet: {f(), g(), a}>
   states: {{q3, q2}, {q0, q1}, {q4}}
   final_states: {{q3, q2}}
   order: post
@@ -262,7 +262,7 @@ EOF
     new_a = @a | @a
     assert_equal( <<EOF,  new_a.minimize.rename_states.to_s)
 <Automaton:
-  system: <System: aphabet: {o(,), a(,), n(), one, zero}, variables: {}>
+  system: <System: aphabet: {o(,), a(,), n(), one, zero}>
   states: {qr0, qr1}
   final_states: {qr0}
   order: post
@@ -287,7 +287,7 @@ EOF
     new_a = ~@a
     assert_equal( <<EOF, new_a.to_s)
 <Automaton:
-  system: <System: aphabet: {o(,), a(,), n(), one, zero}, variables: {}>
+  system: <System: aphabet: {o(,), a(,), n(), one, zero}>
   states: {q0, q1}
   final_states: {q0}
   order: post
@@ -312,7 +312,7 @@ EOF
     new_a = @a & @a
     assert_equal( <<EOF,  new_a.minimize.rename_states.to_s)
 <Automaton:
-  system: <System: aphabet: {o(,), a(,), n(), one, zero}, variables: {}>
+  system: <System: aphabet: {o(,), a(,), n(), one, zero}>
   states: {qr0, qr1}
   final_states: {qr0}
   order: post
@@ -336,7 +336,7 @@ EOF
   def test_to_s
     assert_equal( <<EOF, @a3.to_s )
 <Automaton:
-  system: <System: aphabet: {f(,), g(), a}, variables: {}>
+  system: <System: aphabet: {f(,), g(), a}>
   states: {q, qg, qf}
   final_states: {qf}
   order: post
@@ -349,7 +349,7 @@ EOF
 EOF
     assert_equal( <<EOF, @a3.determinize.to_s )
 <Automaton:
-  system: <System: aphabet: {f(,), g(), a}, variables: {}>
+  system: <System: aphabet: {f(,), g(), a}>
   states: {{q}, {q, qg}, {q, qg, qf}}
   final_states: {{q, qg, qf}}
   order: post
@@ -371,7 +371,7 @@ EOF
 EOF
     assert_equal( <<EOF, @a3.determinize.rename_states.to_s )
 <Automaton:
-  system: <System: aphabet: {f(,), g(), a}, variables: {}>
+  system: <System: aphabet: {f(,), g(), a}>
   states: {qr0, qr1, qr2}
   final_states: {qr2}
   order: post

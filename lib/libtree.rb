@@ -5,16 +5,17 @@ require_relative 'libtree/variable'
 require_relative 'libtree/substitution'
 require_relative 'libtree/automaton'
 require_relative 'libtree/homomorphism'
+require_relative 'libtree/grammar'
 
 module LibTree
 
   using RefineSet
 
-  def self.define_system(alphabet: , variables:, states: nil)
+  def self.define_system(alphabet: , variables: [], states: [])
     Module::new do |m|
       @alphabet = alphabet
       @variables = Set::new(variables)
-      @states = states
+      @states = Set::new(states)
 
       def self.substitution(rules:)
         Substitution::new(system: self, rules: rules)
@@ -41,9 +42,11 @@ module LibTree
         s << @alphabet.collect { |s,arity|
                "#{s}" + (arity > 0 ? "(#{","*(arity-1)})" : "")
              }.join(", ")
-        s << "}, variables: {"
-        s << @variables.to_a.join(", ")
-        if @states
+        if @variables.length > 0
+          s << "}, variables: {"
+          s << @variables.to_a.join(", ")
+        end
+        if @states.length > 0
           s << "}, states: {"
           s << @states.to_a.join(", ")
         end
@@ -104,7 +107,7 @@ EOF
     Term::new(#{name.inspect}, *children)
   end
 EOF
-      } if @states
+      }
     end
   end 
 
