@@ -23,6 +23,20 @@ class TestGrammar < Minitest::Test
 
     @g = @m.grammar
 
+    @m2 = Module::new do
+      extend terminals
+      extend non_terminals
+      class << self
+        attr_reader :grammar
+      end
+
+      @grammar = LibTree::RegularGrammar::new( axiom: list, non_terminals: non_terminals , terminals: terminals, rules: {
+        list => [ void, cons(nat, list)],
+        nat => [ zero, s(nat) ]
+      } )
+    end
+
+    @rg = @m2.grammar
   end
 
   def test_grammar
@@ -39,6 +53,23 @@ EOF
     assert( @g.regular? )
     d = @g.derivation
     assert( d.derivation, LibTree::Term )
+  end
+
+  def test_regular_grammar
+    assert_equal( <<EOF, @rg.to_s )
+<Grammar:
+  axiom: list
+  non_terminals: <System: aphabet: {list, nat}>
+  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  rules:
+    list -> [void, cons(nat,list)]
+    nat -> [zero, s(nat)]
+>
+EOF
+    assert( @rg.regular? )
+    d = @rg.derivation
+    assert( d.derivation, LibTree::Term )
+    assert_equal( @rg.dup.class, LibTree::RegularGrammar )
   end
 
 end
