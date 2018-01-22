@@ -68,8 +68,12 @@ EOF
 EOF
     assert( @rg.regular? )
     d = @rg.derivation
-    assert( d.derivation, LibTree::Term )
-    assert_equal( @rg.dup.class, LibTree::RegularGrammar )
+    assert_equal( LibTree::Term, d.derivation.class )
+    assert_equal( LibTree::RegularGrammar, @rg.dup.class )
+    assert_equal( Set[ @m2.nat, @m2.list ], @rg.productive_non_terminals )
+    assert_equal( Set[ @m2.nat, @m2.list ], @rg.reachable_non_terminals )
+    assert_equal( Set[ @m2.nat, @m2.list ], @rg.dup.set_axiom(@m2.nat).productive_non_terminals )
+    assert_equal( Set[ @m2.nat ], @rg.dup.set_axiom(@m2.nat).reachable_non_terminals )
   end
 
 end

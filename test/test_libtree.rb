@@ -142,4 +142,13 @@ class TestLibTree < Minitest::Test
     assert_equal("fgxyagxy", s2)
   end
 
+  def test_hash
+    assert_equal(@m.a, @m.a)
+    h = {}
+    h[@m.a] = true
+    h[@m.g(@m.a,@m.b)] = true
+    assert( h[@m.a] )
+    assert( h[@m.g(@m.a,@m.b)] )
+  end
+
 end

@@ -15,6 +15,10 @@ module LibTree
         self
       end
 
+      def to_s
+        "<RuleSet: #{collect{ |k,v| "#{k} -> #{v.kind_of?(Array) ? "[#{v.join(", ")}]" : v.to_s}" }.join(", ")}>"
+      end
+
     end #RuleSet
 
     class Derivation
@@ -49,7 +53,7 @@ module LibTree
     attr_reader :axiom, :non_terminals, :terminals, :rules
     def initialize( axiom:, non_terminals:, terminals:, rules:)
       @non_terminals = non_terminals.dup
-      raise "Grammar's axiom must be a non terminal!" unless @non_terminals.alphabet[axiom.symbol] && @non_terminals.alphabet[axiom.symbol] == axiom.arity
+      raise "Grammar's axiom must be a non terminal!" unless @non_terminals.alphabet.include?(axiom.symbol) && @non_terminals.alphabet[axiom.symbol] == axiom.arity
       @axiom = axiom
       @terminals = terminals.dup
       @rules =  RuleSet::new
@@ -63,8 +67,14 @@ module LibTree
     end
 
     def axiom=(new_axiom)
-      raise "Grammar's axiom must be a non terminal!" unless @non_terminals.alphabet[new_axiom.symbol] && @non_terminals.alphabet[new_axiom.symbol] == new_axiom.arity
+      raise "Grammar's axiom must be a non terminal!" unless @non_terminals.alphabet.include?(new_axiom.symbol) && @non_terminals.alphabet[new_axiom.symbol] == new_axiom.arity
       @axiom = new_axiom
+    end
+
+    def set_axiom(new_axiom)
+      raise "Grammar's axiom must be a non terminal!" unless @non_terminals.alphabet.include?(new_axiom.symbol) && @non_terminals.alphabet[new_axiom.symbol] == new_axiom.arity
+      @axiom = new_axiom
+      self
     end
 
     def to_s
