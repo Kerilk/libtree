@@ -82,6 +82,16 @@ EOF
     nat -> [zero, s(nat)]
 >
 EOF
+    assert_equal( <<EOF, @rg.dup.rename_non_terminals.to_s )
+<Grammar:
+  axiom: list
+  non_terminals: <System: aphabet: {nt_0, nt_1}>
+  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  rules:
+    nt_0 -> [void, cons(nt_1,nt_0)]
+    nt_1 -> [zero, s(nt_1)]
+>
+EOF
     rg2 = @rg.dup.set_axiom(@m2.nat)
     assert_equal( Set[ @m2.nat, @m2.list ], rg2.productive_non_terminals )
     assert_equal( Set[ @m2.nat ], rg2.reachable_non_terminals )

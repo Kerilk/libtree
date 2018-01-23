@@ -78,6 +78,33 @@ module LibTree
       self.dup.reduce!
     end
 
+    def rename_non_terminals(prefix = "nt")
+      new_non_terminals = {}
+      translate_table = {}
+      @non_terminals.alphabet.each_with_index { |(s, a), i|
+        nnt = "#{prefix}_#{i}"
+        new_non_terminals[nnt] = a
+        translate_table[[s,a]] = nnt
+      }
+      r = RuleSet::new
+      @rules.each { |k,v|
+        nk = k.dup
+        nk.each { |n|
+          n.set_symbol translate_table[ [n.symbol, n.arity] ] if translate_table.include?( [n.symbol, n.arity] )
+        }
+        v = [v] unless v.kind_of?(Array)
+        v.each { |p|
+          np = p.dup
+          np.each { |n|
+           n.set_symbol translate_table[ [n.symbol, n.arity] ] if translate_table.include?( [n.symbol, n.arity] )
+          }
+          r.append(nk, np)
+        }
+      }
+      @non_terminals = LibTree::define_system( alphabet: new_non_terminals )
+      @rules = r
+      self
+    end
   end
 
 end
