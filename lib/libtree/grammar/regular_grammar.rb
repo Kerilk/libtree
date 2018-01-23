@@ -45,6 +45,39 @@ module LibTree
       reachable
     end
 
+    def reduce!
+      pnt = productive_non_terminals
+      r_prime = restrict_rules( pnt )
+      @non_terminals = LibTree::define_system( alphabet: pnt.collect { |e| [e.symbol, e.arity] }.to_h )
+      @rules = r_prime
+      rnt = reachable_non_terminals
+      r_second = restrict_rules( rnt )
+      @non_terminals = LibTree::define_system( alphabet: rnt.collect { |e| [e.symbol, e.arity] }.to_h  )
+      @rules = r_second
+      self
+    end
+
+    def restrict_rules( nt )
+      r = RuleSet::new
+      @rules.each { |k, v|
+        next unless nt.include?( k )
+        v = [v] unless v.kind_of?(Array)
+        v.each { |p|
+          keep = true
+          p.each { |c|
+            keep = false unless nt.include?( c ) || (@terminals.alphabet.include?(c.symbol) && @terminals.alphabet[c.symbol] == c.arity)
+          }
+          r.append(k, p) if keep
+        }
+      }
+      r
+    end
+    private :restrict_rules
+
+    def reduce
+      self.dup.reduce!
+    end
+
   end
 
 end

@@ -72,8 +72,28 @@ EOF
     assert_equal( LibTree::RegularGrammar, @rg.dup.class )
     assert_equal( Set[ @m2.nat, @m2.list ], @rg.productive_non_terminals )
     assert_equal( Set[ @m2.nat, @m2.list ], @rg.reachable_non_terminals )
-    assert_equal( Set[ @m2.nat, @m2.list ], @rg.dup.set_axiom(@m2.nat).productive_non_terminals )
-    assert_equal( Set[ @m2.nat ], @rg.dup.set_axiom(@m2.nat).reachable_non_terminals )
+    assert_equal( <<EOF, @rg.reduce.to_s )
+<Grammar:
+  axiom: list
+  non_terminals: <System: aphabet: {list, nat}>
+  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  rules:
+    list -> [void, cons(nat,list)]
+    nat -> [zero, s(nat)]
+>
+EOF
+    rg2 = @rg.dup.set_axiom(@m2.nat)
+    assert_equal( Set[ @m2.nat, @m2.list ], rg2.productive_non_terminals )
+    assert_equal( Set[ @m2.nat ], rg2.reachable_non_terminals )
+    assert_equal( <<EOF, rg2.reduce.to_s )
+<Grammar:
+  axiom: nat
+  non_terminals: <System: aphabet: {nat}>
+  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  rules:
+    nat -> [zero, s(nat)]
+>
+EOF
   end
 
 end
