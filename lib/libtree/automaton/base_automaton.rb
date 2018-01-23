@@ -39,6 +39,10 @@ module LibTree
         r
       end
 
+      def include?(key)
+        super(self.class::compute_rule(key))
+      end
+
       def [](key)
         super(self.class::compute_rule(key))
       end
