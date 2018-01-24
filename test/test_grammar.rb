@@ -82,6 +82,16 @@ EOF
     nat -> [zero, s(nat)]
 >
 EOF
+    assert_equal( <<EOF, @rg.normalize.to_s )
+<Grammar:
+  axiom: list
+  non_terminals: <System: aphabet: {list, nat}>
+  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  rules:
+    list -> [void, cons(nat,list)]
+    nat -> [zero, s(nat)]
+>
+EOF
     assert_equal( <<EOF, @rg.dup.rename_non_terminals.to_s )
 <Grammar:
   axiom: list

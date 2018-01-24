@@ -82,7 +82,7 @@ module LibTree
       new_non_terminals = {}
       translate_table = {}
       @non_terminals.alphabet.each_with_index { |(s, a), i|
-        nnt = "#{prefix}_#{i}"
+        nnt = "#{prefix}_#{i}".to_sym
         new_non_terminals[nnt] = a
         translate_table[[s,a]] = nnt
       }
@@ -105,6 +105,65 @@ module LibTree
       @rules = r
       self
     end
+
+    def normalize!
+      reduce!
+      nts = @non_terminals.alphabet.collect { |k,v|
+        Term::new(k)
+      }.to_set
+      counter = 0
+      loop do
+        previous_non_terminals = nts.dup
+        previous_rules = @rules
+        @rules = RuleSet::new
+        previous_rules.each { |k, v|
+          v = [v] unless v.kind_of?(Array)
+          v.each { |p|
+            if p.arity > 0
+              p.children.each { |c|
+                unless nts.include?(c)
+                  new_name = "new_nt_#{counter}".to_sym
+                  new_term = Term::new(new_name)
+                  nts.add(new_term)
+                  @rules.append(new_term, c.dup)
+                  counter += 1
+                  c.set_symbol(new_name)
+                  c.children.replace([])
+                end
+              }
+            end
+            @rules.append(k, p)
+          }
+        }
+        break if nts == previous_non_terminals
+      end
+      @non_terminals = LibTree::define_system( alphabet: nts.collect { |e| [e.symbol, e.arity] }.to_h  )
+      loop do
+        previous_rules = @rules
+        @rules = RuleSet::new
+        previous_rules.each { |k, v|
+          v = [v] unless v.kind_of?(Array)
+          v.each { |p|
+            if nts.include?(p)
+              v2 = previous_rules[p]
+              v2 = [v2] unless v.kind_of?(Array)
+              v2.each { |p2|
+                @rules.append(k, p2)
+              }
+            else
+              @rules.append(k, p)
+            end
+          }
+        }
+        break if previous_rules == @rules
+      end
+      reduce!
+    end
+
+    def normalize
+      self.dup.normalize!
+    end
+
   end
 
 end
