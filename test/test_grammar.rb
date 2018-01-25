@@ -177,8 +177,8 @@ EOF
 
   end
 
-  def test_grammar_automaton
-      assert_equal( <<EOF, @rg.automaton.to_s )
+  def test_grammar_top_down_automaton
+      assert_equal( <<EOF, @rg.top_down_automaton.to_s )
 <Automaton:
   system: <System: aphabet: {zero, void, s(), cons(,)}, states: {q_list, q_nat}>
   states: {q_list, q_nat}
@@ -192,13 +192,13 @@ EOF
      -> [q_list]
 >
 EOF
-    assert( @rg.automaton.deterministic? )
+    assert( @rg.top_down_automaton.deterministic? )
     d = @rg.derivation
-    a = @rg.automaton
+    a = @rg.top_down_automaton
     r = a.run d.derivation
     assert(r.run)
 
-    assert_equal( <<EOF, @rg2.automaton.to_s )
+    assert_equal( <<EOF, @rg2.top_down_automaton.to_s )
 <Automaton:
   system: <System: aphabet: {zero, void, s(), cons(,)}, states: {q_list, q_nat, q_new_nt_0}>
   states: {q_list, q_nat, q_new_nt_0}
@@ -213,7 +213,7 @@ EOF
      -> [q_list]
 >
 EOF
-    refute( @rg2.automaton.deterministic? )
+    refute( @rg2.top_down_automaton.deterministic? )
     d2 = @rg2.derivation
     r = a.run d2.derivation
     assert(r.run)
