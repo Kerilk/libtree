@@ -77,6 +77,16 @@ module LibTree
         self
       end
 
+      def append(key, value)
+        value = [value] unless value.kind_of?(Array)
+        if self.include?(key)
+          old_value = self[key]
+          self[key] = (old_value + value).uniq
+        else
+          self[key] = value
+        end
+      end
+
     end #RuleSet
 
     class Run
