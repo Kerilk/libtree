@@ -75,6 +75,13 @@ EOF
       TopDownRun::new(self, tree, rewrite: rewrite)
     end
 
+    def deterministic?
+      rules.each { |k,v|
+        return false if v.kind_of?(Array) && v.length > 1
+      }
+      true
+    end
+
   end
 
 end

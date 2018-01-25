@@ -143,7 +143,7 @@ EOF
     def deterministic?
       return false if epsilon_rules?
       rules.each { |k,v|
-        return false if v.kind_of?(Array)
+        return false if v.kind_of?(Array) && v.length > 1
       }
       true
     end

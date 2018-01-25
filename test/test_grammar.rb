@@ -164,6 +164,16 @@ EOF
     nat -> [zero, s(nat)]
 >
 EOF
+   assert_equal( <<EOF, @rg2.to_s )
+<Grammar:
+  axiom: list
+  non_terminals: <System: aphabet: {list, nat}>
+  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  rules:
+    list -> [void, cons(nat,list), cons(nat,cons(nat,list))]
+    nat -> [zero, s(nat)]
+>
+EOF
 
   end
 
@@ -182,6 +192,32 @@ EOF
      -> [q_list]
 >
 EOF
-end
+    assert( @rg.automaton.deterministic? )
+    d = @rg.derivation
+    a = @rg.automaton
+    r = a.run d.derivation
+    assert(r.run)
+
+    assert_equal( <<EOF, @rg2.automaton.to_s )
+<Automaton:
+  system: <System: aphabet: {zero, void, s(), cons(,)}, states: {q_list, q_nat, q_new_nt_0}>
+  states: {q_list, q_nat, q_new_nt_0}
+  initial_states: {q_list}
+  order: pre
+  rules:
+    q_list(void) -> [void]
+    q_list(cons) -> [cons(q_nat,q_list), cons(q_nat,q_new_nt_0)]
+    q_new_nt_0(cons) -> [cons(q_nat,q_list)]
+    q_nat(zero) -> [zero]
+    q_nat(s) -> [s(q_nat)]
+     -> [q_list]
+>
+EOF
+    refute( @rg2.automaton.deterministic? )
+    d2 = @rg2.derivation
+    r = a.run d2.derivation
+    assert(r.run)
+
+  end
 
 end

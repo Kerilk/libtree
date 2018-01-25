@@ -165,6 +165,10 @@ module LibTree
     end
 
     def automaton
+      dup.automaton!
+    end
+
+    def automaton!
       normalize!
       nts_states_map = @non_terminals.alphabet.collect { |k, a| [ Term::new(k), "q_#{k}".to_sym ] }.to_h
       states = nts_states_map.values
