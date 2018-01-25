@@ -37,6 +37,21 @@ class TestGrammar < Minitest::Test
     end
 
     @rg = @m2.grammar
+
+    @m3 = Module::new do
+      extend terminals
+      extend non_terminals
+      class << self
+        attr_reader :grammar
+      end
+
+      @grammar = LibTree::RegularGrammar::new( axiom: list, non_terminals: non_terminals , terminals: terminals, rules: {
+        list => [ void, cons(nat, list), cons(nat, cons(nat, list))],
+        nat => [ zero, s(nat) ]
+      } )
+    end
+
+    @rg2 = @m3.grammar
   end
 
   def test_grammar
@@ -114,6 +129,59 @@ EOF
     nat -> [zero, s(nat)]
 >
 EOF
+
+    assert_equal( <<EOF, @rg2.to_s )
+<Grammar:
+  axiom: list
+  non_terminals: <System: aphabet: {list, nat}>
+  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  rules:
+    list -> [void, cons(nat,list), cons(nat,cons(nat,list))]
+    nat -> [zero, s(nat)]
+>
+EOF
+    assert( @rg2.regular? )
+
+    assert_equal( <<EOF, @rg2.reduce.to_s )
+<Grammar:
+  axiom: list
+  non_terminals: <System: aphabet: {list, nat}>
+  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  rules:
+    list -> [void, cons(nat,list), cons(nat,cons(nat,list))]
+    nat -> [zero, s(nat)]
+>
+EOF
+
+    assert_equal( <<EOF, @rg2.normalize.to_s )
+<Grammar:
+  axiom: list
+  non_terminals: <System: aphabet: {list, nat, new_nt_0}>
+  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  rules:
+    list -> [void, cons(nat,list), cons(nat,new_nt_0)]
+    new_nt_0 -> [cons(nat,list)]
+    nat -> [zero, s(nat)]
+>
+EOF
+
   end
+
+  def test_grammar_automaton
+      assert_equal( <<EOF, @rg.automaton.to_s )
+<Automaton:
+  system: <System: aphabet: {zero, void, s(), cons(,)}, states: {q_list, q_nat}>
+  states: {q_list, q_nat}
+  initial_states: {q_list}
+  order: pre
+  rules:
+    q_list(void) -> [void]
+    q_list(cons) -> [cons(q_nat,q_list)]
+    q_nat(zero) -> [zero]
+    q_nat(s) -> [s(q_nat)]
+     -> [q_list]
+>
+EOF
+end
 
 end
