@@ -127,7 +127,7 @@ class TestAutomaton < Minitest::Test
   def test_top_down_automaton
     assert_equal( <<EOF, @a6.to_s )
 <Automaton:
-  system: <System: aphabet: {one(), zero(), nill}, states: {q0, q1, q2}>
+  system: <System: aphabet: {one(), zero(), nill}>
   states: {q0, q1, q2}
   initial_states: {q0}
   order: pre
@@ -139,7 +139,7 @@ class TestAutomaton < Minitest::Test
     q1(one) -> one(q0)
     q2(zero) -> zero(q1)
     q2(one) -> one(q2)
-     -> [q0]
+     -> q0
 >
 EOF
     r1 = @a6.run @t6t
@@ -172,7 +172,7 @@ EOF
   def test_epsilon_rules
     assert(@a4.epsilon_rules?)
     assert_equal( 1, @a4.epsilon_rules.size)
-    assert_equal( [:qnelist, :qlist], @a4.epsilon_rules.first)
+    assert_equal( [:qnelist, [:qlist]], @a4.epsilon_rules.first)
     refute(@a4.deterministic?)
     assert_equal( <<EOF, @a4.remove_epsilon_rules.to_s )
 <Automaton:
@@ -206,10 +206,10 @@ EOF
   def test_automaton
     k, v = @a.rules.first
     assert_equal( @m.zero, k )
-    assert_equal( :q0, v )
+    assert_equal( [:q0], v )
     k, v = @a.rules.reverse_each.first
     assert_equal( LibTree::Automaton::RuleSet::compute_rule(@m.o(:q1,:q1)), k )
-    assert_equal( :q1, v )
+    assert_equal( [:q1], v )
     assert_equal( 44, @a.size )
     assert( @a.deterministic? )
     assert( @a.complete? )

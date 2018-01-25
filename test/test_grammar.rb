@@ -160,7 +160,7 @@ EOF
   terminals: <System: aphabet: {zero, void, s(), cons(,)}>
   rules:
     list -> [void, cons(nat,list), cons(nat,new_nt_0)]
-    new_nt_0 -> [cons(nat,list)]
+    new_nt_0 -> cons(nat,list)
     nat -> [zero, s(nat)]
 >
 EOF
@@ -180,16 +180,16 @@ EOF
   def test_grammar_top_down_automaton
       assert_equal( <<EOF, @rg.top_down_automaton.to_s )
 <Automaton:
-  system: <System: aphabet: {zero, void, s(), cons(,)}, states: {q_list, q_nat}>
+  system: <System: aphabet: {zero, void, s(), cons(,)}>
   states: {q_list, q_nat}
   initial_states: {q_list}
   order: pre
   rules:
-    q_list(void) -> [void]
-    q_list(cons) -> [cons(q_nat,q_list)]
-    q_nat(zero) -> [zero]
-    q_nat(s) -> [s(q_nat)]
-     -> [q_list]
+    q_list(void) -> void
+    q_list(cons) -> cons(q_nat,q_list)
+    q_nat(zero) -> zero
+    q_nat(s) -> s(q_nat)
+     -> q_list
 >
 EOF
     assert( @rg.top_down_automaton.deterministic? )
@@ -200,17 +200,17 @@ EOF
 
     assert_equal( <<EOF, @rg2.top_down_automaton.to_s )
 <Automaton:
-  system: <System: aphabet: {zero, void, s(), cons(,)}, states: {q_list, q_nat, q_new_nt_0}>
+  system: <System: aphabet: {zero, void, s(), cons(,)}>
   states: {q_list, q_nat, q_new_nt_0}
   initial_states: {q_list}
   order: pre
   rules:
-    q_list(void) -> [void]
+    q_list(void) -> void
     q_list(cons) -> [cons(q_nat,q_list), cons(q_nat,q_new_nt_0)]
-    q_new_nt_0(cons) -> [cons(q_nat,q_list)]
-    q_nat(zero) -> [zero]
-    q_nat(s) -> [s(q_nat)]
-     -> [q_list]
+    q_new_nt_0(cons) -> cons(q_nat,q_list)
+    q_nat(zero) -> zero
+    q_nat(s) -> s(q_nat)
+     -> q_list
 >
 EOF
     refute( @rg2.top_down_automaton.deterministic? )
@@ -219,5 +219,45 @@ EOF
     assert(r.run)
 
   end
+
+  def test_grammar_bottom_up_automaton
+    assert_equal( <<EOF, @rg.bottom_up_automaton.to_s )
+<Automaton:
+  system: <System: aphabet: {zero, void, s(), cons(,)}>
+  states: {q_list, q_nat}
+  final_states: {q_list}
+  order: post
+  rules:
+    void -> q_list
+    cons(q_nat,q_list) -> q_list
+    zero -> q_nat
+    s(q_nat) -> q_nat
+>
+EOF
+    assert( @rg.bottom_up_automaton.deterministic? )
+    d = @rg.derivation
+    a = @rg.bottom_up_automaton
+    r = a.run d.derivation
+    assert(r.run)
+
+    assert_equal( <<EOF, @rg2.bottom_up_automaton.to_s )
+<Automaton:
+  system: <System: aphabet: {zero, void, s(), cons(,)}>
+  states: {q_list, q_nat, q_new_nt_0}
+  final_states: {q_list}
+  order: post
+  rules:
+    void -> q_list
+    cons(q_nat,q_list) -> [q_list, q_new_nt_0]
+    cons(q_nat,q_new_nt_0) -> q_list
+    zero -> q_nat
+    s(q_nat) -> q_nat
+>
+EOF
+    refute( @rg2.bottom_up_automaton.deterministic? )
+    a3 = @rg2.bottom_up_automaton.minimize!.rename_states
+    assert_equal( @rg2.bottom_up_automaton.minimize!.rename_states.to_s, a.minimize!.rename_states.to_s)
+
+   end
 
 end

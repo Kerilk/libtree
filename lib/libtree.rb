@@ -46,10 +46,10 @@ module LibTree
           s << "}, variables: {"
           s << @variables.to_a.join(", ")
         end
-        if @states.length > 0
-          s << "}, states: {"
-          s << @states.to_a.join(", ")
-        end
+#        if @states.length > 0
+#          s << "}, states: {"
+#          s << @states.to_a.join(", ")
+#        end
         s << "}>"
         s
       end

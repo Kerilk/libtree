@@ -64,7 +64,7 @@ module LibTree
     end
 
     def dup
-      children = @children.collect { |c| c.dup }
+      children = @children.collect { |c| c.kind_of?(Symbol) ? c : c.dup }
       t = self.class::new(@symbol, *children)
       return t
     end
