@@ -258,6 +258,12 @@ EOF
     a3 = @rg2.bottom_up_automaton.minimize!.rename_states
     assert_equal( @rg2.bottom_up_automaton.minimize!.rename_states.to_s, a.minimize!.rename_states.to_s)
 
+    assert( @rg2.bottom_up_automaton.determinize! )
+    d = @rg.derivation
+    a = @rg2.bottom_up_automaton.determinize!
+    r = a.run d.derivation
+    assert(r.run)
+
    end
 
 end
