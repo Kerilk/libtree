@@ -181,15 +181,15 @@ EOF
       assert_equal( <<EOF, @rg.top_down_automaton.to_s )
 <Automaton:
   system: <System: aphabet: {zero, void, s(), cons(,)}>
-  states: {q_list, q_nat}
-  initial_states: {q_list}
+  states: {list, nat}
+  initial_states: {list}
   order: pre
   rules:
-    q_list(void) -> void
-    q_list(cons) -> cons(q_nat,q_list)
-    q_nat(zero) -> zero
-    q_nat(s) -> s(q_nat)
-     -> q_list
+    list(void) -> void
+    list(cons) -> cons(nat,list)
+    nat(zero) -> zero
+    nat(s) -> s(nat)
+     -> list
 >
 EOF
     assert( @rg.top_down_automaton.deterministic? )
@@ -201,16 +201,16 @@ EOF
     assert_equal( <<EOF, @rg2.top_down_automaton.to_s )
 <Automaton:
   system: <System: aphabet: {zero, void, s(), cons(,)}>
-  states: {q_list, q_nat, q_new_nt_0}
-  initial_states: {q_list}
+  states: {list, nat, new_nt_0}
+  initial_states: {list}
   order: pre
   rules:
-    q_list(void) -> void
-    q_list(cons) -> [cons(q_nat,q_list), cons(q_nat,q_new_nt_0)]
-    q_new_nt_0(cons) -> cons(q_nat,q_list)
-    q_nat(zero) -> zero
-    q_nat(s) -> s(q_nat)
-     -> q_list
+    list(void) -> void
+    list(cons) -> [cons(nat,list), cons(nat,new_nt_0)]
+    new_nt_0(cons) -> cons(nat,list)
+    nat(zero) -> zero
+    nat(s) -> s(nat)
+     -> list
 >
 EOF
     refute( @rg2.top_down_automaton.deterministic? )
@@ -224,14 +224,14 @@ EOF
     assert_equal( <<EOF, @rg.bottom_up_automaton.to_s )
 <Automaton:
   system: <System: aphabet: {zero, void, s(), cons(,)}>
-  states: {q_list, q_nat}
-  final_states: {q_list}
+  states: {list, nat}
+  final_states: {list}
   order: post
   rules:
-    void -> q_list
-    cons(q_nat,q_list) -> q_list
-    zero -> q_nat
-    s(q_nat) -> q_nat
+    void -> list
+    cons(nat,list) -> list
+    zero -> nat
+    s(nat) -> nat
 >
 EOF
     assert( @rg.bottom_up_automaton.deterministic? )
@@ -243,15 +243,15 @@ EOF
     assert_equal( <<EOF, @rg2.bottom_up_automaton.to_s )
 <Automaton:
   system: <System: aphabet: {zero, void, s(), cons(,)}>
-  states: {q_list, q_nat, q_new_nt_0}
-  final_states: {q_list}
+  states: {list, nat, new_nt_0}
+  final_states: {list}
   order: post
   rules:
-    void -> q_list
-    cons(q_nat,q_list) -> [q_list, q_new_nt_0]
-    cons(q_nat,q_new_nt_0) -> q_list
-    zero -> q_nat
-    s(q_nat) -> q_nat
+    void -> list
+    cons(nat,list) -> [list, new_nt_0]
+    cons(nat,new_nt_0) -> list
+    zero -> nat
+    s(nat) -> nat
 >
 EOF
     refute( @rg2.bottom_up_automaton.deterministic? )
