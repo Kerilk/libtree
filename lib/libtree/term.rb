@@ -2,6 +2,7 @@ module LibTree
   using RefineSet
 
   class Term
+    using RefineSymbol
     attr_reader :children
     attr_reader :symbol
 
@@ -64,7 +65,7 @@ module LibTree
     end
 
     def dup
-      children = @children.collect { |c| c.kind_of?(Symbol) ? c : c.dup }
+      children = @children.collect { |c| c.dup }
       t = self.class::new(@symbol, *children)
       return t
     end

@@ -167,7 +167,7 @@ module LibTree
       states = nts_states_map.values
       mod = LibTree::define_system( alphabet: @terminals.alphabet, states: states )
       r = RuleSet::new
-      @rules.collect { |k,v|
+      @rules.each { |k,v|
         s = nts_states_map[k]
         v.each { |p|
           new_k = Term::new(s, Term::new( p.symbol, * p.arity.times.collect { |i| "x#{i}".to_sym } ))
@@ -188,7 +188,7 @@ module LibTree
       states = nts_states_map.values
       mod = LibTree::define_system( alphabet: @terminals.alphabet, states: states )
       r = RuleSet::new
-      @rules.collect { |k,v|
+      @rules.each { |k,v|
         s = nts_states_map[k]
         v.each { |p|
           new_p = Term::new( p.symbol, * p.children.collect { |c| nts_states_map[c] } )
