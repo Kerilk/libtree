@@ -44,7 +44,7 @@ module LibTree
       end
 
       def rules_to_s(separator = ", ")
-        "#{collect{ |k,v| "#{k} -> #{v.kind_of?(Array) ? ( v.length > 1 ? "[#{v.join(", ")}]" : v.first.to_s ) : v.to_s}" }.join(separator)}"
+        "#{collect{ |k,v| "#{k} -> #{v.length > 1 ? "[#{v.join(", ")}]" : v.first.to_s}" }.join(separator)}"
       end
 
       def include?(key)
@@ -56,6 +56,7 @@ module LibTree
       end
 
       def []=(key,value)
+        raise "invalid rule!" unless value.kind_of?(Array)
         super(self.class::compute_rule(key), value)
       end
 
@@ -64,13 +65,13 @@ module LibTree
       end
 
       def rules_size
-        collect { |k,v| k.size * ( v.kind_of?(Array) ? v.size : 1 ) }.inject(&:+)
+        collect { |k,v| k.size * v.size }.inject(&:+)
       end
 
       def apply(node, rewrite = true)
         s = self[node]
         if s
-          s = s.sample if s.kind_of?(Array)
+          s = s.sample
           if rewrite
             node.set_symbol s
           else

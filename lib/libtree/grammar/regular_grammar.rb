@@ -13,7 +13,6 @@ module LibTree
       loop do
         previously_productive = productive.dup
         @rules.each { |k, v|
-          v = [v] unless v.kind_of?(Array)
           v.each { |p|
             prod = true
             p.each { |c|
@@ -33,7 +32,6 @@ module LibTree
         previously_reachable = reachable.dup
         previously_reachable.each { |r|
           v = @rules[r]
-          v = [v] unless v.kind_of?(Array)
           v.each { |p|
             p.each { |c|
               reachable.add(c) if @non_terminals.alphabet.include?(c.symbol) && @non_terminals.alphabet[c.symbol] == c.arity
@@ -61,7 +59,6 @@ module LibTree
       r = RuleSet::new
       @rules.each { |k, v|
         next unless nt.include?( k )
-        v = [v] unless v.kind_of?(Array)
         v.each { |p|
           keep = true
           p.each { |c|
@@ -92,7 +89,6 @@ module LibTree
         nk.each { |n|
           n.set_symbol translate_table[ [n.symbol, n.arity] ] if translate_table.include?( [n.symbol, n.arity] )
         }
-        v = [v] unless v.kind_of?(Array)
         v.each { |p|
           np = p.dup
           np.each { |n|
@@ -117,7 +113,6 @@ module LibTree
         previous_rules = @rules
         @rules = RuleSet::new
         previous_rules.each { |k, v|
-          v = [v] unless v.kind_of?(Array)
           v.each { |p|
             if p.arity > 0
               p.children.each { |c|
@@ -142,11 +137,9 @@ module LibTree
         previous_rules = @rules
         @rules = RuleSet::new
         previous_rules.each { |k, v|
-          v = [v] unless v.kind_of?(Array)
           v.each { |p|
             if nts.include?(p)
               v2 = previous_rules[p]
-              v2 = [v2] unless v.kind_of?(Array)
               v2.each { |p2|
                 @rules.append(k, p2)
               }
@@ -176,7 +169,6 @@ module LibTree
       r = RuleSet::new
       @rules.collect { |k,v|
         s = nts_states_map[k]
-        v = [v] unless v.kind_of?(Array)
         v.each { |p|
           new_k = Term::new(s, Term::new( p.symbol, * p.arity.times.collect { |i| "x#{i}".to_sym } ))
           new_p = Term::new( p.symbol, * p.children.collect { |c| Term::new(nts_states_map[c]) } )
@@ -198,7 +190,6 @@ module LibTree
       r = RuleSet::new
       @rules.collect { |k,v|
         s = nts_states_map[k]
-        v = [v] unless v.kind_of?(Array)
         v.each { |p|
           new_p = Term::new( p.symbol, * p.children.collect { |c| nts_states_map[c] } )
           r.append( new_p, s)

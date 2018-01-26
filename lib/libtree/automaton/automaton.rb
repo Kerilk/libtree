@@ -49,7 +49,6 @@ EOF
       s = @system.substitution(rules: state_mapping)
       new_rules = RuleSet::new
       @rules.each { |k, v|
-        v = [ v ] unless v.kind_of?(Array)
         v.each { |p|
           new_rules.append(s[k], s[p])
         }
@@ -73,11 +72,9 @@ EOF
       new_rules = RuleSet::new
       @system.alphabet.each { |sym, arity|
         new_states.to_a.repeated_permutation(arity).each { |perm|
-          os1 = automaton1.rules[@system.send(sym, *perm.collect{|e| e.first})]
-          os2 = automaton2.rules[@system.send(sym, *perm.collect{|e| e.last })]
-          os1 = os1.first if os1.kind_of?(Array)
-          os2 = os2.first if os2.kind_of?(Array)
-          new_rules[@system.send(sym, *perm.collect(&:to_set))] = Set[os1, os2]
+          os1 = automaton1.rules[@system.send(sym, *perm.collect{|e| e.first})].first
+          os2 = automaton2.rules[@system.send(sym, *perm.collect{|e| e.last })].first
+          new_rules[@system.send(sym, *perm.collect(&:to_set))] = [ Set[os1, os2] ]
         }
       }
       new_states = new_states.collect(&:to_set).to_set
@@ -109,10 +106,7 @@ EOF
         epsilon_closures.each { |s, c|
 	  c.to_a.each { |st|
             new_state = e_r[st]
-            new_state = [ new_state ] unless new_state.kind_of?(Array)
-            new_state.each { |ns|
-              c.add(ns) if ns
-            }
+            c.merge(new_state) if new_state
           }
         }
         break if previous_epsilon_closures == epsilon_closures
@@ -120,7 +114,6 @@ EOF
       epsilon_closures = epsilon_closures.to_h
       new_rules = RuleSet::new
       non_epsilon_rules.each { |k, v|
-        v = [v] unless v.kind_of?(Array)
         v.each { |s|
           states = epsilon_closures[s].to_a
           states.each { |st|
@@ -159,7 +152,7 @@ EOF
     def deterministic?
       return false if epsilon_rules?
       rules.each { |k,v|
-        return false if v.kind_of?(Array) && v.length > 1
+        return false if v.length > 1
       }
       true
     end
@@ -183,10 +176,10 @@ EOF
       @system.alphabet.each { |sym, arity|
         if arity > 0
           @states.to_a.repeated_permutation(arity) { |perm|
-            @rules[@system.send(sym, *perm)] = :__dead unless @rules[@system.send(sym, *perm)]
+            @rules[@system.send(sym, *perm)] = [:__dead] unless @rules[@system.send(sym, *perm)]
           }
         else
-          @rules[@system.send(sym)] = :__dead unless @rules[@system.send(sym)]
+          @rules[@system.send(sym)] = [:__dead] unless @rules[@system.send(sym)]
         end
       }
       return self
@@ -209,11 +202,7 @@ EOF
             k = @system.send(sym, *perm)
             v = available_rules.delete(k)
             if v
-              if v.kind_of? Array
-                marked_states.merge(v)
-              else
-                marked_states.add(v)
-              end
+              marked_states.merge(v)
               marked_rules[k] = v
             end
           }
@@ -254,18 +243,12 @@ EOF
             products.each { |p|
               k = @system.send(sym, *p)
               v = @rules[k]
-              if v
-                if v.kind_of? Array
-                  new_state.merge v
-                else
-                  new_state.add v
-                end
-              end
+              new_state.merge v if v
             }
             unless new_state == Set[]
               new_states.add new_state
               perm = perm.collect(&:to_set)
-              new_rules[@system.send(sym, *perm)] = new_state
+              new_rules[@system.send(sym, *perm)] = [ new_state ]
             end
           }
         }
@@ -304,10 +287,8 @@ EOF
                     (0..(arity-1)).each { |pos|
                       new_perm1 = perm.dup.insert(pos, s)
                       new_perm2 = perm.dup.insert(pos, s2)
-                      q1 = @rules[@system.send(sym, *new_perm1)]
-                      q2 = @rules[@system.send(sym, *new_perm2)]
-                      q1 = q1.first if q1.kind_of?(Array)
-                      q2 = q2.first if q2.kind_of?(Array)
+                      q1 = @rules[@system.send(sym, *new_perm1)].first
+                      q2 = @rules[@system.send(sym, *new_perm2)].first
                       if !previous_equivalence.equivalent?(q1, q2)
                         throw :found, false
                       end
@@ -339,9 +320,8 @@ EOF
       new_rules = RuleSet::new
       @system.alphabet.each { |sym, arity|
          new_states.to_a.repeated_permutation(arity).each { |perm|
-           old_state = @rules[@system.send(sym, *perm.collect{|e| e.first})]
-           old_state = old_state.first if old_state.kind_of?(Array)
-           new_rules[@system.send(sym, *perm)] = equivalence.equivalence( old_state )
+           old_state = @rules[@system.send(sym, *perm.collect{|e| e.first})].first
+           new_rules[@system.send(sym, *perm)] = [ equivalence.equivalence( old_state ) ]
          }
       }
       @states = new_states

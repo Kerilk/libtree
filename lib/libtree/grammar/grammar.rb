@@ -8,7 +8,7 @@ module LibTree
       def apply(node)
         s = self[node]
         if s
-          s = s.sample if s.kind_of?(Array)
+          s = s.sample
           node.set_symbol s.symbol
           node.children.replace( s.children.collect { |c| c.dup } )
         end
@@ -20,7 +20,7 @@ module LibTree
       end
 
       def rules_to_s(separator = ", ")
-        "#{collect{ |k,v| "#{k} -> #{v.kind_of?(Array) ? ( v.length > 1 ? "[#{v.join(", ")}]" : v.first.to_s ) : v.to_s}" }.join(separator)}"
+        "#{collect{ |k,v| "#{k} -> #{v.length > 1 ? "[#{v.join(", ")}]" : v.first.to_s}" }.join(separator)}"
       end
 
       def append(key, value)
@@ -31,6 +31,11 @@ module LibTree
         else
           self[key] = value
         end
+      end
+
+      def []=(key,value)
+        raise "invalid rule!" unless value.kind_of?(Array)
+        super(key, value)
       end
 
     end #RuleSet
@@ -72,7 +77,6 @@ module LibTree
       @terminals = terminals.dup
       @rules =  RuleSet::new
       rules.each { |k, v|
-        v = [v] unless v.kind_of?(Array)
         @rules.append(k.dup, v.collect { |p| p.dup })
       }
     end

@@ -13,7 +13,7 @@ module LibTree
       def apply(node, rewrite = true)
         s = self[node]
         if s
-          s = s.sample if s.kind_of?(Array)
+          s = s.sample
           node.set_symbol s.symbol
           node.children.replace node.children.first.children.each_with_index.collect { |c, i|
             node.class::new( s.children[i].symbol, c )
@@ -53,7 +53,10 @@ module LibTree
       @initial_states = Set[*initial_states]
       @rules =  TopDownRuleSet::new
       rules.each { |k, v|
-        @rules[k] = v
+        v = [ v ] unless v.kind_of?(Array)
+        v.each { |p|
+          @rules.append(k.dup, p.dup)
+        }
       }
       @rules[nil] = @initial_states.to_a
     end
@@ -77,7 +80,7 @@ EOF
 
     def deterministic?
       rules.each { |k,v|
-        return false if v.kind_of?(Array) && v.length > 1
+        return false if v.length > 1
       }
       true
     end
