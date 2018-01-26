@@ -1,5 +1,6 @@
 require 'set'
 require_relative 'libtree/refine_set'
+require_relative 'libtree/refine_symbol'
 require_relative 'libtree/term'
 require_relative 'libtree/variable'
 require_relative 'libtree/substitution'

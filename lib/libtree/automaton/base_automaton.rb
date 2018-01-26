@@ -39,6 +39,14 @@ module LibTree
         r
       end
 
+      def to_s(separator = ", ")
+        "<RuleSet: #{rules_to_s(separator)}>"
+      end
+
+      def rules_to_s(separator = ", ")
+        "#{collect{ |k,v| "#{k} -> #{v.kind_of?(Array) ? ( v.length > 1 ? "[#{v.join(", ")}]" : v.first.to_s ) : v.to_s}" }.join(separator)}"
+      end
+
       def include?(key)
         super(self.class::compute_rule(key))
       end

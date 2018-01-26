@@ -15,8 +15,12 @@ module LibTree
         self
       end
 
-      def to_s
-        "<RuleSet: #{collect{ |k,v| "#{k} -> #{v.kind_of?(Array) ? ( v.length > 1 ? "[#{v.join(", ")}]" : v.first.to_s ) : v.to_s}" }.join(", ")}>"
+      def to_s(separator = ", ")
+        "<RuleSet: #{rules_to_s(separator)}>"
+      end
+
+      def rules_to_s(separator = ", ")
+        "#{collect{ |k,v| "#{k} -> #{v.kind_of?(Array) ? ( v.length > 1 ? "[#{v.join(", ")}]" : v.first.to_s ) : v.to_s}" }.join(separator)}"
       end
 
       def append(key, value)
@@ -95,7 +99,7 @@ module LibTree
   non_terminals: #{@non_terminals}
   terminals: #{@terminals}
   rules:
-    #{@rules.collect{ |k,v| "#{k} -> #{v.kind_of?(Array) ? ( v.length > 1 ? "[#{v.join(", ")}]" : v.first.to_s ) : v.to_s}" }.join("\n    ")}
+    #{@rules.rules_to_s("\n    ")}
 >
 EOF
     end

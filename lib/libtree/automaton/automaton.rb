@@ -2,6 +2,7 @@ module LibTree
 
   class Automaton < BaseAutomaton
     using RefineSet
+    using RefineSymbol
 
     attr_reader :final_states
 
@@ -15,9 +16,7 @@ module LibTree
       rules.each { |k, v|
         v = [ v ] unless v.kind_of?(Array)
         v.each { |p|
-          k = k.dup unless k.kind_of?(Symbol)
-          p = p.dup unless p.kind_of?(Symbol)
-          @rules.append(k, p)
+          @rules.append(k.dup, p.dup)
         }
       }
     end
@@ -30,7 +29,7 @@ module LibTree
   final_states: #{@final_states.to_s}
   order: #{order}
   rules:
-    #{@rules.collect{ |k,v| "#{k} -> #{v.kind_of?(Array) ? ( v.length > 1 ? "[#{v.join(", ")}]" : v.first.to_s ) : v.to_s}" }.join("\n    ")}
+    #{@rules.rules_to_s("\n    ")}
 >
 EOF
     end
