@@ -74,7 +74,7 @@ EOF
         new_states.to_a.repeated_permutation(arity).each { |perm|
           os1 = automaton1.rules[@system.send(sym, *perm.collect{|e| e.first})].first
           os2 = automaton2.rules[@system.send(sym, *perm.collect{|e| e.last })].first
-          new_rules[@system.send(sym, *perm.collect(&:to_set))] = [ Set[os1, os2] ]
+          new_rules.append(@system.send(sym, *perm.collect(&:to_set)), Set[os1, os2] )
         }
       }
       new_states = new_states.collect(&:to_set).to_set
@@ -176,10 +176,10 @@ EOF
       @system.alphabet.each { |sym, arity|
         if arity > 0
           @states.to_a.repeated_permutation(arity) { |perm|
-            @rules[@system.send(sym, *perm)] = [:__dead] unless @rules[@system.send(sym, *perm)]
+            @rules.append(@system.send(sym, *perm), :__dead) unless @rules[@system.send(sym, *perm)]
           }
         else
-          @rules[@system.send(sym)] = [:__dead] unless @rules[@system.send(sym)]
+          @rules.append(@system.send(sym), :__dead) unless @rules[@system.send(sym)]
         end
       }
       return self
@@ -321,7 +321,7 @@ EOF
       @system.alphabet.each { |sym, arity|
          new_states.to_a.repeated_permutation(arity).each { |perm|
            old_state = @rules[@system.send(sym, *perm.collect{|e| e.first})].first
-           new_rules[@system.send(sym, *perm)] = [ equivalence.equivalence( old_state ) ]
+           new_rules.append(@system.send(sym, *perm), equivalence.equivalence( old_state ))
          }
       }
       @states = new_states
