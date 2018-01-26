@@ -21,6 +21,18 @@ module LibTree
       }
     end
 
+    def to_top_down_automaton
+      new_rules = RuleSet::new
+      @rules.each { |k, v|
+        v.each { |p|
+          new_k = Term::new(p, Term::new( k.symbol, * k.arity.times.collect { |i| "x#{i}".to_sym } ))
+          new_p = Term::new(k.symbol, * k.children.collect { |c| Term::new( c ) } )
+          new_rules.append(new_k, new_p)
+        }
+      }
+      TopDownAutomaton::new(system: @system, states: @states.dup, initial_states: @final_states.dup, rules: new_rules)
+    end
+
     def to_s
       <<EOF
 <Automaton:

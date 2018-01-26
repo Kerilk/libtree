@@ -105,7 +105,7 @@ class TestAutomaton < Minitest::Test
     @m6 = Module::new do
       extend mod6
       class << self
-        attr_reader :automaton, :tree_true, :tree_false
+        attr_reader :automaton, :automaton_bu, :tree_true, :tree_false
       end
       @automaton = LibTree::TopDownAutomaton::new( system: mod6, states: [:q0, :q1, :q2], initial_states: [:q0], rules: {
         q0(nill) => nill,
@@ -116,10 +116,20 @@ class TestAutomaton < Minitest::Test
         q2(zero(:x)) => zero(q1()),
         q2( one(:x)) =>  one(q2())
       } )
+      @automaton_bu = LibTree::Automaton::new( system: mod6, states: [:q0, :q1, :q2], final_states: [:q0], rules: {
+        nill => :q0,
+        zero(:q0) => :q0,
+        one(:q1) => :q0,
+        zero(:q2) => :q1,
+        one(:q0) => :q1,
+        zero(:q1) => :q2,
+        one(:q2) => :q2
+      } )
       @tree_true = one(one(zero(nill)))
       @tree_false = one(zero(nill))
     end
     @a6 = @m6.automaton
+    @a6bu = @m6.automaton_bu
     @t6t = @m6.tree_true
     @t6f = @m6.tree_false
   end
@@ -167,6 +177,27 @@ EOF
     r2 = @a6.run @t6f
     refute( r2.run )
     assert_equal( "one(zero(q2(nill)))", r2.tree.to_s )
+
+    r3 = @a6bu.run @t6t
+    assert( r3.run )
+    r4 = @a6bu.run @t6f
+    refute( r4.run )
+  end
+
+  def test_bottom_up_to_top_down
+    assert_equal(@a6bu.to_top_down_automaton.to_s, @a6.to_s)
+    r1 = @a6bu.to_top_down_automaton.run @t6t
+    assert( r1.run )
+    r2 = @a6bu.to_top_down_automaton.run @t6f
+    refute( r2.run )
+  end
+
+  def test_top_down_to_bottom_up
+    assert_equal(@a6.to_bottom_up_automaton.to_s, @a6bu.to_s)
+    r1 = @a6.to_bottom_up_automaton.run @t6t
+    assert( r1.run )
+    r2 = @a6.to_bottom_up_automaton.run @t6f
+    refute( r2.run )
   end
 
   def test_epsilon_rules

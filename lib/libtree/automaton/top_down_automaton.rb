@@ -74,6 +74,19 @@ module LibTree
 EOF
     end
 
+    def to_bottom_up_automaton
+      new_rules = RuleSet::new
+      @rules.each { |k, v|
+        next unless k
+        v.each { |p|
+          new_k = Term::new(p.symbol, * p.children.collect { |c| c } )
+          new_p = k.symbol
+          new_rules.append(new_k, new_p)
+        }
+      }
+      Automaton::new(system: @system, states: @states.dup, final_states: @initial_states, rules: new_rules)
+    end
+
     def run(tree, rewrite: true)
       TopDownRun::new(self, tree, rewrite: rewrite)
     end
