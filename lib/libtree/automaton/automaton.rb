@@ -21,6 +21,10 @@ module LibTree
       }
     end
 
+    def to_grammar(axiom = nil)
+      to_top_down_automaton.to_grammar(axiom)
+    end
+
     def to_top_down_automaton
       new_rules = RuleSet::new
       @rules.each { |k, v|

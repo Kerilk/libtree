@@ -165,7 +165,6 @@ module LibTree
       normalize!
       nts_states_map = @non_terminals.alphabet.collect { |k, a| [ Term::new(k), "#{k}".to_sym ] }.to_h
       states = nts_states_map.values
-      mod = LibTree::define_system( alphabet: @terminals.alphabet, states: states )
       r = RuleSet::new
       @rules.each { |k,v|
         s = nts_states_map[k]
@@ -175,7 +174,7 @@ module LibTree
           r.append(new_k, new_p)
         }
       }
-      LibTree::TopDownAutomaton::new(system: mod, states: states, initial_states: [ nts_states_map[@axiom] ], rules: r)
+      LibTree::TopDownAutomaton::new(system: @terminals, states: states, initial_states: [ nts_states_map[@axiom] ], rules: r)
     end
 
     def bottom_up_automaton
@@ -186,7 +185,6 @@ module LibTree
       normalize!
       nts_states_map = @non_terminals.alphabet.collect { |k, a| [ Term::new(k), "#{k}".to_sym ] }.to_h
       states = nts_states_map.values
-      mod = LibTree::define_system( alphabet: @terminals.alphabet, states: states )
       r = RuleSet::new
       @rules.each { |k,v|
         s = nts_states_map[k]
@@ -195,7 +193,7 @@ module LibTree
           r.append( new_p, s)
         }
       }
-      LibTree::Automaton::new(system: mod, states: states, final_states: [ nts_states_map[@axiom] ], rules: r)
+      LibTree::Automaton::new(system: @terminals, states: states, final_states: [ nts_states_map[@axiom] ], rules: r)
     end
 
   end

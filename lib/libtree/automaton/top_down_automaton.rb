@@ -87,6 +87,21 @@ EOF
       Automaton::new(system: @system, states: @states.dup, final_states: @initial_states, rules: new_rules)
     end
 
+    def to_grammar(axiom = nil)
+      axiom = Term::new( @initial_states.first ) unless axiom
+      non_terminals = LibTree::define_system( alphabet: @states.collect { |s| [s, 0] }.to_h )
+      new_rules = RegularGrammar::RuleSet::new
+      @rules.each { |k,v|
+        next unless k
+        v.each { |p|
+          new_k = Term::new( k.symbol )
+          new_p = Term::new( p.symbol, *p.children.collect { |c| Term::new(c) } )
+          new_rules.append(new_k, new_p)
+        }
+      }
+      RegularGrammar::new(axiom: axiom, non_terminals: non_terminals, terminals: @system, rules: new_rules)
+    end
+
     def run(tree, rewrite: true)
       TopDownRun::new(self, tree, rewrite: rewrite)
     end

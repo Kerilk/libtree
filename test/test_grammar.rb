@@ -177,6 +177,14 @@ EOF
 
   end
 
+  def test_top_down_automaton_to_grammar
+    assert_equal( @rg.to_s, @rg.top_down_automaton.to_grammar.to_s )
+  end
+
+  def test_bottom_up_automaton_to_grammar
+    assert_equal( @rg.to_s, @rg.bottom_up_automaton.to_grammar.to_s )
+  end
+
   def test_grammar_top_down_automaton
       assert_equal( <<EOF, @rg.top_down_automaton.to_s )
 <Automaton:
