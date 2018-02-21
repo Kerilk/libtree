@@ -25,7 +25,7 @@ module LibTree
 
     def *(substitution)
       n = substitution.rules[@symbol]
-      n ? n : self.dup
+      n ? n.dup : self.dup
     end
 
   end

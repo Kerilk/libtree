@@ -1,6 +1,7 @@
 module LibTree
 
   class Substitution
+    using RefineSymbol
     attr_reader :system
     attr_reader :rules
     
@@ -25,8 +26,8 @@ module LibTree
 
     def [](term)
       unless term.kind_of?(Term)
-        return @rules[term] if @rules[term]
-        return term
+        return @rules[term].dup if @rules[term]
+        return term.dup
       end
       return term * self
     end
