@@ -58,8 +58,8 @@ EOF
       @states.size + @rules.rules_size
     end
 
-    def rename_states(prefix = "qr")
-      state_mapping = @states.each_with_index.collect{ |s,i| [s, :"#{prefix}#{i}"] }.to_h
+    def rename_states(prefix = "qr", mapping: {})
+      state_mapping = @states.each_with_index.collect{ |s,i| [s, mapping[s] ? mapping[s] : :"#{prefix}#{i}"] }.to_h
       new_states = Set::new(@states.collect{ |s| state_mapping[s]})
       new_final_states = Set::new(@final_states.collect{ |s| state_mapping[s]})
       s = @system.substitution(rules: state_mapping)
