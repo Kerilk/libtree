@@ -95,7 +95,7 @@ EOF
         next unless k
         v.each { |p|
           new_k = Term::new( k.symbol )
-          new_p = Term::new( p.symbol, *p.children.collect { |c| Term::new(c) } )
+          new_p = Term::new( p.symbol, *p.children.collect { |c| c.kind_of?(Term) ? c.dup : Term::new(c) } )
           new_rules.append(new_k, new_p)
         }
       }
