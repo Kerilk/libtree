@@ -109,7 +109,7 @@ EOF
 EOF
     assert_equal( <<EOF, @rg.dup.rename_non_terminals.to_s )
 <Grammar:
-  axiom: list
+  axiom: nt_0
   non_terminals: <System: aphabet: {nt_0, nt_1}>
   terminals: <System: aphabet: {zero, void, s(), cons(,)}>
   rules:

@@ -99,6 +99,7 @@ module LibTree
       }
       @non_terminals = LibTree::define_system( alphabet: new_non_terminals )
       @rules = r
+      @axiom = Term::new(translate_table[ [@axiom.symbol, @axiom.arity] ])
       self
     end
 
