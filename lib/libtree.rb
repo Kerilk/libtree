@@ -18,6 +18,15 @@ module LibTree
       @variables = Set::new(variables)
       @states = Set::new(states)
 
+      def method_missing(m, *args, &block)
+        case m
+        when /x\d+/, /sq\d+/
+          Variable::new(m.to_sym)
+        else
+          super
+        end
+      end
+
       def self.substitution(rules:)
         Substitution::new(system: self, rules: rules)
       end
