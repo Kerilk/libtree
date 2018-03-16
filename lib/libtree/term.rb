@@ -12,7 +12,7 @@ module LibTree
 
     def initialize(symbol, *children)
       @symbol = symbol
-      @children = children.collect { |c| c.kind_of?(Term) ? c : Variable::new(c) }
+      @children = children.collect { |c| c.kind_of?(Term) || c.kind_of?(RegularExpression) ? c : Variable::new(c) }
     end
 
     def arity
