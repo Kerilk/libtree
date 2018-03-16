@@ -18,22 +18,22 @@ class TestHomomorphism < Minitest::Test
       @homomorphism = LibTree::Homomorphism::new(
          input_system: mod,
          output_system: mod,
-         variables: [:x1, :x2, :x3],
-         rules: { :g => f(:x1, f(:x2, :x3)) }
+         variables: [x1, x2, x3],
+         rules: { :g => f(x1, f(x2, x3)) }
       )
       @output_tree_prime = f(a,a)
       @homomorphism_prime = LibTree::Homomorphism::new(
          input_system: mod,
          output_system: mod,
-         variables: [:x1, :x2, :x3],
-         rules: { :g => f(:x1, :x1) }
+         variables: [x1, x2, x3],
+         rules: { :g => f(x1, x1) }
       )
       @output_tree_ter = h(a,h(b,b,b),a)
       @homomorphism_ter = LibTree::Homomorphism::new(
          input_system: mod,
          output_system: mod,
-         variables: [:x1, :x2, :x3],
-         rules: { :g => h(:x1, :x2, :x3) }
+         variables: [x1, x2, x3],
+         rules: { :g => h(x1, x2, x3) }
       )
     end
     @t = @m.tree
@@ -56,15 +56,15 @@ class TestHomomorphism < Minitest::Test
       @homomorphism = LibTree::Homomorphism::new(
         input_system: mod2,
         output_system: mod2,
-        variables: [:x1, :x2],
-        rules: { :a => n(o(n(:x1), n(:x2))) }
+        variables: [x1, x2],
+        rules: { :a => n(o(n(x1), n(x2))) }
       )
       @output_tree_prime = n(o(zero,one))
       @homomorphism_prime = LibTree::Homomorphism::new(
         input_system: mod2,
         output_system: mod2,
-        variables: [:x1, :x2],
-        rules: { :a => :x1 }
+        variables: [x1, x2],
+        rules: { :a => x1 }
       )
     end
     @t2 = @m2.tree

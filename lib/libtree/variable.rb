@@ -24,7 +24,7 @@ module LibTree
     alias ground_term? ground?
 
     def *(substitution)
-      n = substitution.rules[@symbol]
+      n = substitution.rules[self]
       n ? n.dup : self.dup
     end
 

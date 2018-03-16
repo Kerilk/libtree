@@ -27,7 +27,7 @@ module LibTree
       @rules.each { |k,v|
         vars = @variables.take(@input_system.arity(k))
         v_vars = v.variable_positions.collect { |p|
-          v[p]
+          Variable::new(v[p])
         }
         vars.each { |variable|
           return false unless v_vars.count(variable) <= 1
@@ -56,7 +56,7 @@ module LibTree
     def complete?
       @rules.each { |k,v|
         vars = @variables.take(@input_system.arity(k))
-        v_vars = v.variable_positions.collect { |p| v[p] }
+        v_vars = v.variable_positions.collect { |p| Variable::new(v[p]) }
         vars.each { |variable|
           return false unless v_vars.count(variable) == 1
         }
@@ -74,7 +74,7 @@ module LibTree
         if r
           return false unless r.height == 1
           vars = @variables.take(arity)
-          r_vars = r.variable_positions.collect { |p| r[p] }
+          r_vars = r.variable_positions.collect { |p| Variable::new(r[p]) }
           return false unless (r_vars & vars) == vars
         end
       }

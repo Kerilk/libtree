@@ -25,11 +25,15 @@ module LibTree
     end
 
     def [](term)
-      unless term.kind_of?(Term)
-        return @rules[term].dup if @rules[term]
-        return term.dup
+      if @rules[term]
+        return @rules[term].dup
+      else
+        if term.kind_of?(Term)
+          return term * self
+        else
+          return term.dup
+        end
       end
-      return term * self
     end
 
   end
