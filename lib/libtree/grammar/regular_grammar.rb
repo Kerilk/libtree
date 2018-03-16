@@ -116,15 +116,16 @@ module LibTree
         previous_rules.each { |k, v|
           v.each { |p|
             if p.arity > 0
-              p.children.each { |c|
+              p.children.collect! { |c|
                 unless nts.include?(c)
                   new_name = "new_nt_#{counter}".to_sym
                   new_term = Term::new(new_name)
                   nts.add(new_term)
-                  @rules.append(new_term, c.dup)
+                  @rules.append(new_term, c)
                   counter += 1
-                  c.set_symbol(new_name)
-                  c.children.replace([])
+                  new_term.dup
+                else
+                  c
                 end
               }
             end
