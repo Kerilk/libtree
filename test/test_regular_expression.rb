@@ -16,18 +16,40 @@ class TestRegularExpression < Minitest::Test
     end
 
     @nat = @m.nat
+
+    @m2 = Module::new do
+      extend terminals
+      class << self
+        attr_reader :nat
+      end
+
+      @nat = void + cons(s(sq)**:* / zero, sq)**:* / void
+    end
+
+    @nat2 = @m2.nat
+
   end
 
   def test_regular_expression
     g = @nat.to_grammar
-    puts g
     a = g.bottom_up_automaton
-    puts a
     a.minimize!.rename_states
-    puts a
     g2 = a.to_grammar
-    puts g2
-    puts g2.reduce
+    assert_equal( <<EOF, g2.reduce.to_s )
+<Grammar:
+  axiom: qr0
+  non_terminals: <System: aphabet: {qr0, qr1}>
+  terminals: <System: aphabet: {void, s(), zero, cons(,)}>
+  rules:
+    qr0 -> [void, cons(qr1,qr0)]
+    qr1 -> [s(qr1), zero]
+>
+EOF
+  end
+
+  def test_implicit_regular_expression
+    g = @nat2.to_grammar
+    assert_equal(@nat.to_grammar.to_s, g.to_s)
   end
 
 end
