@@ -12,7 +12,7 @@ class TestRegularExpression < Minitest::Test
         attr_reader :nat
       end
 
-      @nat = cons(s(sq1).**(:*, sq1)./(sq1, zero), sq2).**(:*, sq2)./(sq2, void)
+      @nat = void + cons(s(sq1).**(:*, sq1)./(sq1, zero), sq2).**(:*, sq2)./(sq2, void)
     end
 
     @nat = @m.nat

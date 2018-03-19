@@ -16,6 +16,10 @@ module LibTree
           Concatenation::new(self, a, Square::new(:sq))
         end
       end
+
+      def +(a)
+        Union::new(self, a)
+      end
     end
 
     include Arithmetic
@@ -63,6 +67,36 @@ module LibTree
   end
 
   class Union < RegularExpression
+    attr_reader :re2
+    def initialize(re, re2)
+      super( re )
+      @re2 = re2
+      @re2 = RegularExpression::new(@re2) if @re2.kind_of?(Term)
+    end
+
+    def to_grammar
+      gre = @re.to_grammar.rename_non_terminals("new_nt1_")
+      gre2 = @re2.to_grammar.rename_non_terminals("new_nt2_")
+      non_terminals = LibTree::define_system( alphabet: (
+        gre.non_terminals.alphabet.to_a +
+        gre2.non_terminals.alphabet.to_a +
+        [[:new_axiom, 0]]
+      ).to_h )
+      terminals = LibTree::define_system( alphabet: (gre.terminals.alphabet.to_a + gre2.terminals.alphabet.to_a).uniq.to_h )
+      rules = Grammar::RuleSet::new
+      axiom = gre.axiom
+      axiom2 = gre2.axiom
+      new_axiom = Term::new(:new_axiom)
+      gre.rules.each { |k, v|
+        rules.append(k, v)
+      }
+      gre2.rules.each { |k, v|
+        rules.append(k, v)
+      }
+      rules.append(new_axiom, [axiom, axiom2])
+      return RegularGrammar::new(axiom: new_axiom, non_terminals: non_terminals, terminals: terminals, rules: rules).normalize!.rename_non_terminals
+    end
+
   end
 
   class Iteration < RegularExpression
@@ -142,6 +176,10 @@ module LibTree
 
     def /(*args, &block)
       RegularExpression::new(self)./(*args, &block)
+    end
+
+    def +(*args, &block)
+      RegularExpression::new(self).+(*args, &block)
     end
 
   end
