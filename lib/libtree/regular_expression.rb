@@ -110,7 +110,8 @@ module LibTree
     end
 
     def to_grammar
-      if @number == :*
+      case @number
+      when :*
         gre = @re.to_grammar
         terminals = gre.terminals
         non_terminals = gre.non_terminals
@@ -125,7 +126,15 @@ module LibTree
         }
         rules.append(axiom.dup, variable)
         return RegularGrammar::new(axiom: axiom, non_terminals: non_terminals, terminals: terminals, rules: rules).normalize!
+      when :+
+        new_re = @re./(variable, @re.**(:*, variable))
+        new_re.to_grammar
       else
+        new_re = RegularExpression::new(variable)
+        @number.times { |i|
+          new_re = @re./(variable, new_re)
+        }
+        new_re.to_grammar
       end
     end
 
@@ -160,8 +169,9 @@ module LibTree
       gre2.rules.each { |k, v|
         rules.append(k, v)
       }
-      alphabet = (gre.terminals.alphabet.to_a + gre2.terminals.alphabet.to_a).uniq.to_h
+      alphabet = gre.terminals.alphabet.to_a.uniq.to_h
       alphabet.delete( variable.symbol )
+      alphabet = alphabet.merge(gre2.terminals.alphabet.to_a.uniq.to_h)
       terminals = LibTree::define_system( alphabet: alphabet )
       return RegularGrammar::new(axiom: axiom, non_terminals: non_terminals, terminals: terminals, rules: rules).normalize!.rename_non_terminals
      end
