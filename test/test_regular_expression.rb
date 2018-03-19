@@ -10,12 +10,12 @@ class TestRegularExpression < Minitest::Test
       extend terminals
       class << self
         attr_reader :nat
+        attr_reader :nat2
       end
 
       @nat = void + cons(s(sq1).**(:*, sq1)./(sq1, zero), sq2).**(:*, sq2)./(sq2, void)
+      @nat2 = void + cons(sq1, sq2).**(:*, sq2)./(sq2, void)./(sq1,s(sq3).**(:*, sq3)./(sq3, zero))
     end
-
-    @nat = @m.nat
 
     @m2 = Module::new do
       extend terminals
@@ -25,8 +25,6 @@ class TestRegularExpression < Minitest::Test
 
       @nat = void + cons(s(sq)**:* / zero, sq)**:* / void
     end
-
-    @nat2 = @m2.nat
 
     @m3 = Module::new do
       extend terminals
@@ -54,7 +52,7 @@ class TestRegularExpression < Minitest::Test
   end
 
   def test_regular_expression
-    g = @nat.to_grammar
+    g = @m.nat.to_grammar
     a = g.bottom_up_automaton
     a.minimize!.rename_states
     g2 = a.to_grammar
@@ -68,11 +66,25 @@ class TestRegularExpression < Minitest::Test
     qr1 -> [s(qr1), zero]
 >
 EOF
+    g = @m.nat2.to_grammar
+    a = g.bottom_up_automaton
+    a.minimize!.rename_states
+    g2 = a.to_grammar
+    assert_equal( <<EOF, g2.reduce.to_s )
+<Grammar:
+  axiom: qr0
+  non_terminals: <System: aphabet: {qr0, qr1}>
+  terminals: <System: aphabet: {void, cons(,), s(), zero}>
+  rules:
+    qr0 -> [void, cons(qr1,qr0)]
+    qr1 -> [s(qr1), zero]
+>
+EOF
   end
 
   def test_implicit_regular_expression
-    g = @nat2.to_grammar
-    assert_equal(@nat.to_grammar.to_s, g.to_s)
+    g = @m2.nat.to_grammar
+    assert_equal(@m.nat.to_grammar.to_s, g.to_s)
   end
 
   def test_numbered_iteration
