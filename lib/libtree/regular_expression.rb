@@ -1,8 +1,11 @@
 module LibTree
 
+  class Square < Variable
+  end
+
   class RegularExpression
     module Arithmetic
-      def **(n, v = Variable::new(:sq))
+      def **(n, v = Square::new(:sq))
         Iteration::new(self, n, v)
       end
 
@@ -10,7 +13,7 @@ module LibTree
         if b
           Concatenation::new(self, b, a)
         else
-          Concatenation::new(self, a, Variable::new(:sq))
+          Concatenation::new(self, a, Square::new(:sq))
         end
       end
     end
@@ -66,7 +69,7 @@ module LibTree
 
     attr_reader :number
     attr_reader :variable
-    def initialize(re, number, variable = Variable::new(:sq) )
+    def initialize(re, number, variable = Square::new(:sq) )
       super( re )
       @number = number
       @variable = variable
@@ -98,7 +101,7 @@ module LibTree
 
     attr_reader :re2
     attr_reader :variable
-    def initialize(re, re2, variable = Variable::new(:sq) )
+    def initialize(re, re2, variable = Square::new(:sq) )
       super( re )
       @re2 = re2
       @re2 = RegularExpression::new(@re2) if @re2.kind_of?(Term)

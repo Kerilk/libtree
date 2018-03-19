@@ -21,8 +21,10 @@ module LibTree
 
       def method_missing(m, *args, &block)
         case m
-        when /x\d+/, /sq\d+/
+        when /x\d+/
           Variable::new(m.to_sym)
+        when /sq\d*/
+          Square::new(m.to_sym)
         else
           super
         end
