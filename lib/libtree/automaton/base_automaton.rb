@@ -7,7 +7,7 @@ module LibTree
 
       def equivalent?(s1, s2)
         self.each { |subset|
-          return false if subset.include?(s1) && !subset.include?(s2)
+          return false unless ( subset.include?(s1) == subset.include?(s2) )
         }
         true
       end
