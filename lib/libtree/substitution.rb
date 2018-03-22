@@ -28,7 +28,7 @@ module LibTree
       if @rules[term]
         return @rules[term].dup
       else
-        if term.kind_of?(Term)
+        if term.kind_of?(Term) || term.kind_of?(CaptureState)
           return term * self
         else
           return term.dup

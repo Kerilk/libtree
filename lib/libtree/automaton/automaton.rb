@@ -29,8 +29,17 @@ module LibTree
       new_rules = RuleSet::new
       @rules.each { |k, v|
         v.each { |p|
+          cap = nil
+          if p.kind_of?(CaptureState)
+            cap = p.capture_group.dup
+            p = p.state
+          end
+          p = p.symbol if p.kind_of?(Term)
           new_k = Term::new(p, Term::new( k.symbol, * k.arity.times.collect { |i| "x#{i}".to_sym } ))
           new_p = Term::new(k.symbol, * k.children.collect { |c| Term::new( c ) } )
+          if cap
+            new_p = CaptureState::new(new_p, cap)
+          end
           new_rules.append(new_k, new_p)
         }
       }
@@ -66,6 +75,9 @@ EOF
       new_rules = RuleSet::new
       @rules.each { |k, v|
         v.each { |p|
+          if p.kind_of?(Term) and state_mapping[p.symbol]
+            p = p.dup.set_symbol(state_mapping[p.symbol])
+          end
           new_rules.append(s[k], s[p])
         }
       }

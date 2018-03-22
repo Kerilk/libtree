@@ -10,11 +10,22 @@ module LibTree
         super
       end
 
-      def apply(node, rewrite = true)
+      def apply(node, rewrite = true, capture = nil)
         s = self[node]
         if s
           s = s.sample
+          if s.kind_of? CaptureState
+            cap = s.capture_group
+            s = s.state
+          end
           node.set_symbol s.symbol
+          if capture && cap
+            cap.each { |position, name|
+              child = node.children.first.children[position]
+              raise "Invalid capture position: #{position} for #{node}!" if child.nil?
+              capture[name].push child
+            }
+          end
           node.children.replace node.children.first.children.each_with_index.collect { |c, i|
             node.class::new( s.children[i].symbol, c )
           }
@@ -29,6 +40,7 @@ module LibTree
     class TopDownRun < Run
 
       def initialize(automaton, tree, rewrite: true)
+        @capture = Hash::new { |hash, key| hash[key] = [] }
         @automaton = automaton
         initial = @automaton.rules[nil].sample
         @initial_tree = tree.dup
@@ -79,8 +91,16 @@ EOF
       @rules.each { |k, v|
         next unless k
         v.each { |p|
+          cap = nil
+          if p.kind_of?(CaptureState)
+            cap = p.capture_group.dup
+            p = p.state
+          end
           new_k = Term::new(p.symbol, * p.children.collect { |c| c } )
           new_p = k.symbol
+          if cap
+            new_p = CaptureState::new(new_p, cap)
+          end
           new_rules.append(new_k, new_p)
         }
       }
@@ -94,8 +114,16 @@ EOF
       @rules.each { |k,v|
         next unless k
         v.each { |p|
+          cap = nil
+          if p.kind_of?(CaptureState)
+            cap = p.capture_group.dup
+            p = p.state
+          end
           new_k = Term::new( k.symbol )
           new_p = Term::new( p.symbol, *p.children.collect { |c| c.kind_of?(Term) ? c.dup : Term::new(c) } )
+          if cap
+            new_p = CaptureState::new( new_p, cap )
+          end
           new_rules.append(new_k, new_p)
         }
       }

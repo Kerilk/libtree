@@ -68,12 +68,27 @@ module LibTree
         collect { |k,v| k.size * v.size }.inject(&:+)
       end
 
-      def apply(node, rewrite = true)
+      def apply(node, rewrite = true, capture = nil)
         s = self[node]
         if s
           s = s.sample
+          cap = nil
+          if s.kind_of? CaptureState
+            cap = s.capture_group
+            s = s.state
+          end
+          if s.kind_of? Term
+            s = s.symbol
+          end
           if rewrite
             node.set_symbol s
+            if capture && cap
+              cap.each { |position, name|
+                child = node.children[position]
+                raise "Invalid capture position: #{position} for #{node}!" if child.nil?
+                capture[name].push child
+              }
+            end
           else
             new_node = node.class::new(node.symbol, *node.children)
             node.set_symbol s
@@ -81,6 +96,13 @@ module LibTree
               new_node.children.collect! { |c| c.children.first }
             end
             node.children.replace [new_node]
+            if capture && cap
+              cap.each { |position, name|
+                child = new_node.children[position]
+                raise "Invalid capture position: #{position} for #{new_node}!" if child.nil?
+                capture[name].push child
+              }
+            end
           end
         end
         self
@@ -102,6 +124,7 @@ module LibTree
       attr_reader :tree
 
       def initialize(automaton, tree, rewrite: true)
+        @capture = Hash::new { |hash, key| hash[key] = [] }
         @automaton = automaton.remove_epsilon_rules
         @tree = tree.dup
         @state = @tree.each(automaton.order)
@@ -110,7 +133,7 @@ module LibTree
 
       def move
         node = @state.next
-        @automaton.rules.apply(node, @rewrite)
+        @automaton.rules.apply(node, @rewrite, @capture)
         return self
       end
 
@@ -126,6 +149,11 @@ module LibTree
         rescue StopIteration
         end
         successful?
+      end
+
+      def matches
+        return {} unless successful?
+        return @capture
       end
 
     end

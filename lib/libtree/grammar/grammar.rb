@@ -5,12 +5,24 @@ module LibTree
 
     class RuleSet < Hash
 
-      def apply(node)
+      def apply(node, capture = nil)
         s = self[node]
         if s
           s = s.sample
+          cap = nil
+          if s.kind_of?(CaptureState)
+            cap = s.capture_group
+            s = s.state
+          end
           node.set_symbol s.symbol
           node.children.replace( s.children.collect { |c| c.dup } )
+          if capture && cap
+            cap.each { |position, name|
+              child = node.children[position]
+              raise "Invalid capture position: #{position} for #{node}!" if child.nil?
+              capture[name].push child
+            }
+          end
         end
         self
       end
@@ -45,6 +57,7 @@ module LibTree
 
       def initialize( grammar )
         raise "Grammar is not regular!" unless grammar.regular?
+        @capture = Hash::new { |hash, key| hash[key] = [] }
         @grammar = grammar
         @tree = grammar.axiom.dup
         @state = @tree.each(:pre)
@@ -52,7 +65,7 @@ module LibTree
 
       def derive
         node = @state.peek
-        @grammar.rules.apply(node)
+        @grammar.rules.apply(node, @capture)
         @state.next
         return self
       end
@@ -65,6 +78,10 @@ module LibTree
         rescue StopIteration
         end
         @tree
+      end
+
+      def matches
+        return @capture
       end
 
     end #Derivation
