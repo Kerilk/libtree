@@ -156,9 +156,19 @@ module LibTree
         @rules = RuleSet::new
         previous_rules.each { |k, v|
           v.each { |p|
-            if nts.include?(p)
-              v2 = previous_rules[p]
+            cap = nil
+            if p.kind_of?(CaptureState)
+              new_p = p.state
+              cap = p.capture_group
+            else
+              new_p = p
+            end
+            if nts.include?(new_p)
+              v2 = previous_rules[new_p]
               v2.each { |p2|
+                if cap
+                  p2 = CaptureState::new( p2, cap )
+                end
                 @rules.append(k, p2)
               }
             else
