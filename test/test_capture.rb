@@ -122,17 +122,6 @@ EOF
       r.matches
     )
     assert_equal( @a1.to_s, @a2.to_bottom_up_automaton.to_s )
-    assert_equal( <<EOF, @a2.to_grammar.to_s )
-<Grammar:
-  axiom: qnelist
-  non_terminals: <System: aphabet: {qnat, qlist, qnelist}>
-  terminals: <System: aphabet: {cons(,), s(), zero, empt}>
-  rules:
-    qnat -> [zero, s(qnat)]
-    qlist -> empt
-    qnelist -> [cons(qnat,qlist)({0=>:first_nat}), cons(qnat,qnelist)({0=>:other_nat})]
->
-EOF
     assert_equal( @a2.to_grammar.to_s, @a1.to_grammar.to_s )
     r = nil
     loop do
@@ -157,4 +146,19 @@ EOF
     }
   end
 
+
+  def test_cpature_grammar
+    g = @a2.to_grammar
+    assert_equal( <<EOF, g.to_s )
+<Grammar:
+  axiom: qnelist
+  non_terminals: <System: aphabet: {qnat, qlist, qnelist}>
+  terminals: <System: aphabet: {cons(,), s(), zero, empt}>
+  rules:
+    qnat -> [zero, s(qnat)]
+    qlist -> empt
+    qnelist -> [cons(qnat,qlist)({0=>:first_nat}), cons(qnat,qnelist)({0=>:other_nat})]
+>
+EOF
+  end
 end
