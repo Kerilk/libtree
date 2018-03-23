@@ -160,5 +160,16 @@ EOF
     qnelist -> [cons(qnat,qlist)({0=>:first_nat}), cons(qnat,qnelist)({0=>:other_nat})]
 >
 EOF
+    assert_equal( <<EOF, g.dup.rename_non_terminals.to_s )
+<Grammar:
+  axiom: nt_2
+  non_terminals: <System: aphabet: {nt_0, nt_1, nt_2}>
+  terminals: <System: aphabet: {cons(,), s(), zero, empt}>
+  rules:
+    nt_0 -> [zero, s(nt_0)]
+    nt_1 -> empt
+    nt_2 -> [cons(nt_0,nt_1)({0=>:first_nat}), cons(nt_0,nt_2)({0=>:other_nat})]
+>
+EOF
   end
 end

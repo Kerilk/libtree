@@ -102,9 +102,17 @@ module LibTree
         }
         v.each { |p|
           np = p.dup
+          cap = nil
+          if np.kind_of?(CaptureState)
+            cap = np.capture_group.dup
+            np = np.state
+          end
           np.each { |n|
            n.set_symbol translate_table[ [n.symbol, n.arity] ] if translate_table.include?( [n.symbol, n.arity] )
           }
+          if cap
+            np = CaptureState::new(np, cap)
+          end
           r.append(nk, np)
         }
       }
