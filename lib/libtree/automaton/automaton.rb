@@ -60,6 +60,7 @@ EOF
     end
 
     def rename_states(prefix = "qr", mapping: {})
+      mapping = mapping.to_a.collect { |k,v| [ k.kind_of?(Symbol) ? Term::new(State::new(k)) : k , v.kind_of?(Symbol) ? Term::new(State::new(v)) : v ] }.to_h
       state_mapping = @states.each_with_index.collect{ |s,i| [s.to_var, mapping[s] ? mapping[s] : Term::new(State::new(:"#{prefix}#{i}"))] }.to_h
       new_states = Set::new(@states.collect{ |s| state_mapping[s]})
       new_final_states = Set::new(@final_states.collect{ |s| state_mapping[s]})
