@@ -20,6 +20,11 @@ module LibTree
       def +(a)
         Union::new(self, a)
       end
+
+      def >>(a)
+        Capture::new(self, a)
+      end
+
     end
 
     include Arithmetic
@@ -36,6 +41,12 @@ module LibTree
         nt_alphabet = {}
         rules = Grammar::RuleSet::new
         new_re = re.dup
+        capture_group = {}
+        new_re.children.each_with_index { |c, i|
+          if c.kind_of?(Capture)
+            capture_group[i] = c.capture_name
+          end
+        }
         new_re.each(:pre) { |t|
           t.children.collect! { |c|
             if c.kind_of?(RegularExpression)
@@ -57,6 +68,9 @@ module LibTree
         nt_alphabet[:base_nt0] = 0
         non_terminals = LibTree::define_system( alphabet: nt_alphabet )
         axiom = non_terminals.base_nt0
+        if capture_group != {}
+          new_re = CaptureState::new(new_re, capture_group)
+        end
         rules.append(axiom, new_re)
         return RegularGrammar::new(axiom: axiom, non_terminals: non_terminals, terminals: terminals, rules: rules).normalize!.rename_non_terminals
       else
@@ -178,6 +192,16 @@ module LibTree
 
   end
 
+  class Capture < RegularExpression
+
+    attr_reader :capture_name
+    def initialize(re, capture_name)
+      super( re )
+      @capture_name = capture_name
+    end
+
+  end
+
   class Term
 
     def **(*args, &block)
@@ -190,6 +214,10 @@ module LibTree
 
     def +(*args, &block)
       RegularExpression::new(self).+(*args, &block)
+    end
+
+    def >>(*args, &block)
+      RegularExpression::new(self).>>(*args, &block)
     end
 
   end

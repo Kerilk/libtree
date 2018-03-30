@@ -29,17 +29,9 @@ module LibTree
       new_rules = RuleSet::new
       @rules.each { |k, v|
         v.each { |p|
-          cap = nil
-          if p.kind_of?(CaptureState)
-            cap = p.capture_group.dup
-            p = p.state
-          end
-          p = p.symbol if p.kind_of?(Term)
-          new_k = Term::new(p, Term::new( k.symbol, * k.arity.times.collect { |i| "x#{i}".to_sym } ))
-          new_p = Term::new(k.symbol, * k.children.collect { |c| Term::new( c ) } )
-          if cap
-            new_p = CaptureState::new(new_p, cap)
-          end
+          cap = p.capture
+          new_k = Term::new(p.symbol, Term::new( k.symbol, * k.arity.times.collect { |i| "x#{i}".to_sym } ))
+          new_p = Term::new(k.symbol, * k.children.collect { |c| Term::new( c.symbol ) }, capture: cap )
           new_rules.append(new_k, new_p)
         }
       }
@@ -68,17 +60,14 @@ EOF
     end
 
     def rename_states(prefix = "qr", mapping: {})
-      state_mapping = @states.each_with_index.collect{ |s,i| [s, mapping[s] ? mapping[s] : :"#{prefix}#{i}"] }.to_h
+      state_mapping = @states.each_with_index.collect{ |s,i| [s.to_var, mapping[s] ? mapping[s] : Term::new(State::new(:"#{prefix}#{i}"))] }.to_h
       new_states = Set::new(@states.collect{ |s| state_mapping[s]})
       new_final_states = Set::new(@final_states.collect{ |s| state_mapping[s]})
       s = @system.substitution(rules: state_mapping)
       new_rules = RuleSet::new
       @rules.each { |k, v|
         v.each { |p|
-          if p.kind_of?(Term) and state_mapping[p.symbol]
-            p = p.dup.set_symbol(state_mapping[p.symbol])
-          end
-          new_rules.append(s[k], s[p])
+          new_rules.append(s[k], s[p, keep_capture: true])
         }
       }
       @states = new_states
@@ -91,10 +80,10 @@ EOF
       raise "Systems are different! #{@system} != #{other.system}!" if @system != other.system
       automaton1 = self.determinize.complete.rename_states("qr1_")
       automaton2 = other.determinize.complete.rename_states("qr2_")
-      s1 = automaton1.states.to_a
-      s2 = automaton2.states.to_a
-      fs1 = automaton1.final_states.to_a
-      fs2 = automaton2.final_states.to_a
+      s1 = automaton1.states.collect(&:symbol)
+      s2 = automaton2.states.collect(&:symbol)
+      fs1 = automaton1.final_states.collect(&:symbol)
+      fs2 = automaton2.final_states.collect(&:symbol)
       new_states = s1.product( s2 ).to_set
       new_final_states = fs1.product( s2 ).to_set | s1.product( fs2 ).to_set
       new_rules = RuleSet::new
@@ -102,11 +91,11 @@ EOF
         new_states.to_a.repeated_permutation(arity).each { |perm|
           os1 = automaton1.rules[@system.send(sym, *perm.collect{|e| e.first})].first
           os2 = automaton2.rules[@system.send(sym, *perm.collect{|e| e.last })].first
-          new_rules.append(@system.send(sym, *perm.collect(&:to_set)), Set[os1, os2] )
+          new_rules.append(@system.send(sym, *perm.collect(&:to_set)), Term::new(Set[os1.symbol, os2.symbol]) )
         }
       }
-      new_states = new_states.collect(&:to_set).to_set
-      new_final_states = new_final_states.collect(&:to_set).to_set
+      new_states = new_states.collect(&:to_set).collect { |s| Term::new(s) }.to_set
+      new_final_states = new_final_states.collect(&:to_set).collect { |s| Term::new(s) }.to_set
       Automaton::new(system: @system, states: new_states, final_states: new_final_states, rules: new_rules)
     end
     alias | union
@@ -127,8 +116,10 @@ EOF
       e_r = epsilon_rules
       return self if epsilon_rules.empty?
 
-      non_epsilon_rules = @rules.reject { |k, v| k.kind_of? Symbol }
-      epsilon_closures = @states.collect { |s| [s, Set[s]] }
+      non_epsilon_rules = @rules.reject { |k, v|
+        k.state?
+      }
+      epsilon_closures = @states.collect { |s| [s, Set[s.dup]] }
       loop do
         previous_epsilon_closures = epsilon_closures.collect { |s, c| [s, c.dup] }
         epsilon_closures.each { |s, c|
@@ -145,6 +136,7 @@ EOF
         v.each { |s|
           states = epsilon_closures[s].to_a
           states.each { |st|
+            st.set_capture(s.capture)
             new_rules.append(k,st)
           }
         }
@@ -159,7 +151,7 @@ EOF
 
     def epsilon_rules
       @rules.select { |k, v|
-        k.kind_of? Symbol
+        k.state?
       }
     end
 
@@ -200,14 +192,15 @@ EOF
 
     def complete!
       return self if complete?
-      @states.add(:__dead)
+      dead_state = Term::new(State::new(:__dead))
+      @states.add(dead_state)
       @system.alphabet.each { |sym, arity|
         if arity > 0
           @states.to_a.repeated_permutation(arity) { |perm|
-            @rules.append(@system.send(sym, *perm), :__dead) unless @rules[@system.send(sym, *perm)]
+            @rules.append(@system.send(sym, *perm), dead_state.dup) unless @rules[@system.send(sym, *perm)]
           }
         else
-          @rules.append(@system.send(sym), :__dead) unless @rules[@system.send(sym)]
+          @rules.append(@system.send(sym), dead_state.dup) unless @rules[@system.send(sym)]
         end
       }
       return self
@@ -261,7 +254,7 @@ EOF
         previously_new_rules = new_rules.dup
         @system.alphabet.each { |sym, arity|
           new_states.to_a.repeated_permutation(arity) { |perm|
-            perm = perm.collect(&:to_a)
+            perm = perm.collect(&:symbol).collect(&:to_a)
             if perm != []
               products = perm.first.product(*perm[1..-1])
             else
@@ -271,9 +264,10 @@ EOF
             products.each { |p|
               k = @system.send(sym, *p)
               v = @rules[k]
-              new_state.merge v if v
+              new_state.merge v.collect(&:symbol) if v
             }
             unless new_state == Set[]
+              new_state = Term::new(new_state)
               new_states.add new_state
               perm = perm.collect(&:to_set)
               new_rules[@system.send(sym, *perm)] = [ new_state ]
@@ -285,7 +279,11 @@ EOF
       @rules = new_rules
       @states = new_states
       new_final_states = Set[]
-      new_final_states.merge @states.select{ |s| @final_states.collect{|fs| s.include? fs }.include? true }
+      new_final_states.merge @states.select { |s|
+        @final_states.collect { |fs|
+          s.symbol.to_a.include? fs.symbol
+        }.include? true
+      }
       @final_states = new_final_states
       self
     end
@@ -333,11 +331,11 @@ EOF
         }
         break if previous_equivalence == equivalence
       end
-      new_states = Set[ *equivalence.to_a ]
+      new_states = Set[ *equivalence.to_a.collect { |s| Term::new(s) } ]
       new_final_states = Set[]
       new_states.each { |set|
         final = false
-        set.each { |s|
+        set.symbol.each { |s|
           if @final_states.include?(s)
             final = true
             break
@@ -348,8 +346,8 @@ EOF
       new_rules = RuleSet::new
       @system.alphabet.each { |sym, arity|
          new_states.to_a.repeated_permutation(arity).each { |perm|
-           old_state = @rules[@system.send(sym, *perm.collect{|e| e.first})].first
-           new_rules.append(@system.send(sym, *perm), equivalence.equivalence( old_state ))
+           old_state = @rules[@system.send(sym, *perm.collect{|e| e.symbol.first})].first
+           new_rules.append(@system.send(sym, *perm), Term::new(equivalence.equivalence( old_state )))
          }
       }
       @states = new_states

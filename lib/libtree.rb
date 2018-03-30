@@ -1,10 +1,11 @@
 require 'set'
 require_relative 'libtree/refine_set'
 require_relative 'libtree/refine_symbol'
+require_relative 'libtree/state'
 require_relative 'libtree/term'
+#require_relative 'libtree/capture_state'
 require_relative 'libtree/variable'
 require_relative 'libtree/substitution'
-require_relative 'libtree/capture_state'
 require_relative 'libtree/automaton'
 require_relative 'libtree/homomorphism'
 require_relative 'libtree/grammar'
@@ -94,13 +95,13 @@ module LibTree
 
       @alphabet.each { |name, arity|
         eval <<EOF
-  def #{name}(*children)
+  def #{name}(*children, **opts)
     raise "Invalid child number: \#{children.length}, expected #{arity}" if children.length != #{arity}
-    Term::new(#{name.inspect}, *children)
+    Term::new(#{name.inspect}, *children, **opts)
   end
-  def self.#{name}(*children)
+  def self.#{name}(*children, **opts)
     raise "Invalid child number: \#{children.length}, expected #{arity}" if children.length != #{arity}
-    Term::new(#{name.inspect}, *children)
+    Term::new(#{name.inspect}, *children, **opts)
   end
 EOF
       }
@@ -118,11 +119,13 @@ EOF
 
       @states.each { |name|
         eval <<EOF
-  def #{name}(*children)
-    Term::new(#{name.inspect}, *children)
+  def #{name}(*children, **opts)
+    t = Term::new(State::new(#{name.inspect}), *children, **opts)
+    t
   end
-  def self.#{name}(*children)
-    Term::new(#{name.inspect}, *children)
+  def self.#{name}(*children, **opts)
+    t = Term::new(State::new(#{name.inspect}), *children, **opts)
+    t
   end
 EOF
       }

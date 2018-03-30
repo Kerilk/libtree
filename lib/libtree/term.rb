@@ -1,16 +1,30 @@
 module LibTree
-  using RefineSet
 
   class Term
     using RefineSymbol
+    using RefineSet
     attr_reader :children
     attr_reader :symbol
+    attr_reader :capture
+
+    def state?
+      return @symbol.kind_of?(State)
+    end
+
+    def capture?
+      return @capture
+    end
 
     def set_symbol(s)
       @symbol = s
     end
 
-    def initialize(symbol, *children)
+   def set_capture(c)
+     @capture = c
+   end
+
+    def initialize(symbol, *children, capture: nil)
+      @capture = capture
       @symbol = symbol
       @children = children.collect { |c| c.kind_of?(Term) || c.kind_of?(RegularExpression) ? c : Variable::new(c) }
     end
@@ -20,7 +34,11 @@ module LibTree
     end
 
     def to_s
-      "#{symbol}#{arity > 0 ? "(#{children.collect{ |e| e.to_s}.join(',')})" : ""}"
+      "#{symbol.to_s}#{arity > 0 ? "(#{children.collect{ |e| e.to_s}.join(',')})" : ""}#{@capture ? "(#{@capture.to_s})" : ""}"
+    end
+
+    def to_var
+      Variable::new(@symbol.dup)
     end
 
     def root
@@ -66,12 +84,12 @@ module LibTree
 
     def dup
       children = @children.collect { |c| c.dup }
-      t = self.class::new(@symbol, *children)
+      t = self.class::new(@symbol, *children, capture: @capture)
       return t
     end
 
     def ==(other)
-      self.class === other && @symbol == other.symbol && @children == other.children
+      other.kind_of?(Term) && ( @symbol == other.symbol || other.symbol == @symbol ) && @children == other.children
     end
 
     alias eql? ==

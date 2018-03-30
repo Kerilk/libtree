@@ -5,35 +5,51 @@ require_relative '../lib/libtree'
 class TestCapture < Minitest::Test
 
   def setup
+    non_terminals = LibTree::define_system( alphabet: { list: 0, nat: 0 })
     mod1 = LibTree::define_system( alphabet: {cons: 2, s: 1, zero: 0, empt: 0}, states: [:qnat, :qlist, :qnelist])
     @m1 = Module::new do
       extend mod1
+      extend non_terminals
       class << self
         attr_reader :automaton
+        attr_reader :automaton_epsilon
         attr_reader :top_down_automaton
         attr_reader :tree
+        attr_reader :regular_expression1
+        attr_reader :regular_expression2
       end
-      @automaton = LibTree::Automaton::new( system: mod1, states: [:qnat, :qlist, :qnelist], final_states: [:qnelist], rules: {
+      @automaton = LibTree::Automaton::new( system: mod1, states: [qnat, qlist, qnelist], final_states: [qnelist], rules: {
         zero => qnat,
         s(qnat) => qnat,
         empt => qlist,
-        cons(qnat, qlist)   => LibTree::CaptureState::new(qnelist, {0=>:first_nat}),
-        cons(qnat, qnelist) => LibTree::CaptureState::new(qnelist, {0=>:other_nat})
+        cons(qnat, qlist)   => qnelist(capture: {0=>:first_nat}),
+        cons(qnat, qnelist) => qnelist(capture: {0=>:other_nat})
+      } )
+      @automaton_epsilon = LibTree::Automaton::new( system: mod1, states: [qnat, qlist, qnelist], final_states: [qnelist], rules: {
+        zero => qnat,
+        s(qnat) => qnat,
+        empt => qlist,
+        cons(qnat, qlist)   => qnelist(capture: {0=>:nat}),
+        qnelist => qlist
       } )
       @tree = cons(s(s(zero)), cons(s(zero), cons(s(s(s(zero))), empt )))
-      @top_down_automaton = LibTree::TopDownAutomaton::new( system: mod1, states: [:qnat, :qlist, :qnelist], initial_states: [:qnelist], rules: {
+      @top_down_automaton = LibTree::TopDownAutomaton::new( system: mod1, states: [qnat, qlist, qnelist], initial_states: [qnelist], rules: {
         qnat(zero) => zero,
         qnat(s(:x0)) => s(qnat),
         qlist(empt) => empt,
         qnelist(cons(:x0,:x1)) => [
-          LibTree::CaptureState::new(cons(qnat, qlist),   {0=>:first_nat}),
-          LibTree::CaptureState::new(cons(qnat, qnelist), {0=>:other_nat})
+          cons(qnat, qlist, capture: {0=>:first_nat}),
+          cons(qnat, qnelist, capture: {0=>:other_nat})
         ]
       } )
+      @regular_expression1 = cons((s(sq)**:* / zero)>>:capt_nat, sq)**:* / empt
+      @regular_expression2 = empt + cons((s(sq)**:* / zero)>>:capt_nat, sq)**:* / empt
     end
     @a1 = @m1.automaton
     @t1 = @m1.tree
     @a2 = @m1.top_down_automaton
+    @re1 = @m1.regular_expression1
+    @a3 = @m1.automaton_epsilon
   end
 
   def test_capture_bu_automaton
@@ -125,7 +141,8 @@ EOF
     assert_equal( @a2.to_grammar.to_s, @a1.to_grammar.to_s )
     r = nil
     loop do
-      r = @a2.to_grammar.top_down_automaton.run(@t1)
+      g = @a2.to_grammar
+      r = g.top_down_automaton.run(@t1)
       break if r.run
     end
     assert_equal( { 
@@ -147,7 +164,7 @@ EOF
   end
 
 
-  def test_cpature_grammar
+  def test_capture_grammar
     g = @a2.to_grammar
     assert_equal( <<EOF, g.to_s )
 <Grammar:
@@ -172,4 +189,42 @@ EOF
 >
 EOF
   end
+
+  def test_bottom_up_capture_with_epsilon
+    assert_equal( <<EOF, @a3.to_s )
+<Automaton:
+  system: <System: aphabet: {cons(,), s(), zero, empt}>
+  states: {qnat, qlist, qnelist}
+  final_states: {qnelist}
+  order: post
+  rules:
+    zero -> qnat
+    s(qnat) -> qnat
+    empt -> qlist
+    cons(qnat,qlist) -> qnelist({0=>:nat})
+    qnelist -> qlist
+>
+EOF
+    assert_equal( <<EOF, @a3.remove_epsilon_rules.to_s )
+<Automaton:
+  system: <System: aphabet: {cons(,), s(), zero, empt}>
+  states: {qnat, qlist, qnelist}
+  final_states: {qnelist}
+  order: post
+  rules:
+    zero -> qnat
+    s(qnat) -> qnat
+    empt -> qlist
+    cons(qnat,qlist) -> [qnelist({0=>:nat}), qlist({0=>:nat})]
+>
+EOF
+  end
+
+#  def test_capture_regular_expression
+#    g = @re1.to_grammar
+#    puts g.to_s
+#    a = g.bottom_up_automaton
+#    puts a.to_s
+#  end
+
 end

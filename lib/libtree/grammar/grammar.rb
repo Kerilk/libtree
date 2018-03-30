@@ -9,11 +9,7 @@ module LibTree
         s = self[node]
         if s
           s = s.sample
-          cap = nil
-          if s.kind_of?(CaptureState)
-            cap = s.capture_group
-            s = s.state
-          end
+          cap = s.capture
           node.set_symbol s.symbol
           node.children.replace( s.children.collect { |c| c.dup } )
           if capture && cap

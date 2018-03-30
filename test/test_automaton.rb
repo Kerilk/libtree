@@ -5,7 +5,7 @@ require_relative '../lib/libtree'
 class TestAutomaton < Minitest::Test
 
   def setup
-    mod = LibTree::define_system( alphabet: {o: 2, a: 2, n: 1, one: 0, zero: 0}, variables: [])
+    mod = LibTree::define_system( alphabet: {o: 2, a: 2, n: 1, one: 0, zero: 0}, states: [:q0, :q1])
     @m = Module::new do
       extend mod
       class << self
@@ -13,19 +13,19 @@ class TestAutomaton < Minitest::Test
       end
       @tree = a(n(o(zero,one)),o(one,n(zero)))
       @tree2 = a(n(n(o(zero,one))),o(one,n(zero)))
-      @automaton = LibTree::Automaton::new( system: mod, states: [:q0, :q1], final_states: [:q1],  rules: {
-        zero => :q0,
-        one => :q1,
-        n(:q0) => :q1,
-        n(:q1) => :q0,
-        a(:q0, :q0) => :q0,
-        a(:q1, :q0) => :q0,
-        a(:q0, :q1) => :q0,
-        a(:q1, :q1) => :q1,
-        o(:q0, :q0) => :q0,
-        o(:q1, :q0) => :q1,
-        o(:q0, :q1) => :q1,
-        o(:q1, :q1) => :q1
+      @automaton = LibTree::Automaton::new( system: mod, states: [q0, q1], final_states: [q1],  rules: {
+        zero => q0,
+        one => q1,
+        n(q0) => q1,
+        n(q1) => q0,
+        a(q0, q0) => q0,
+        a(q1, q0) => q0,
+        a(q0, q1) => q0,
+        a(q1, q1) => q1,
+        o(q0, q0) => q0,
+        o(q1, q0) => q1,
+        o(q0, q1) => q1,
+        o(q1, q1) => q1
       } )
 
     end
@@ -33,70 +33,70 @@ class TestAutomaton < Minitest::Test
     @t2 = @m.tree2
     @a = @m.automaton
 
-    mod2 = LibTree::define_system( alphabet: {g: 1, a: 0, b: 0}, variables: [])
+    mod2 = LibTree::define_system( alphabet: {g: 1, a: 0, b: 0}, states: [:q, :q0, :q1])
     @m2 = Module::new do
       extend mod2
       class << self
         attr_reader :automaton
       end
-      @automaton = LibTree::Automaton::new( system: mod2, states: [:q0, :q1, :q], final_states: [:q0], rules: {
-        a => :q0,
-        g(:q0) => :q1,
-        g(:q1) => :q0,
-        g(:q) => [:q0, :q1]
+      @automaton = LibTree::Automaton::new( system: mod2, states: [q0, q1, q], final_states: [q0], rules: {
+        a => q0,
+        g(q0) => q1,
+        g(q1) => q0,
+        g(q) => [q0, q1]
       } )
     end
     @a2 = @m2.automaton
 
-    mod3 = LibTree::define_system( alphabet: {f: 2, g: 1, a: 0}, variables: [])
+    mod3 = LibTree::define_system( alphabet: {f: 2, g: 1, a: 0}, states: [:q, :qf, :qg])
     @m3 = Module::new do
       extend mod3
       class << self
         attr_reader :automaton
       end
-      @automaton = LibTree::Automaton::new( system: mod3, states: [:q, :qg, :qf], final_states: [:qf], rules: {
-        a => :q,
-        g(:q) => [ :q, :qg ],
-        g(:qg) => :qf,
-        f(:q,:q) => :q
+      @automaton = LibTree::Automaton::new( system: mod3, states: [q, qg, qf], final_states: [qf], rules: {
+        a => q,
+        g(q) => [ q, qg ],
+        g(qg) => qf,
+        f(q,q) => q
       } )
     end
     @a3 = @m3.automaton
 
-    mod4 = LibTree::define_system( alphabet: {cons: 2, s: 1, zero: 0, empt: 0}, variables: [])
+    mod4 = LibTree::define_system( alphabet: {cons: 2, s: 1, zero: 0, empt: 0}, states: [:qnat, :qlist, :qnelist])
     @m4 = Module::new do
       extend mod4
       class << self
         attr_reader :automaton
       end
-      @automaton = LibTree::Automaton::new( system: mod4, states: [:qnat, :qlist, :qnelist], final_states: [:qnelist], rules: {
-        zero => :qnat,
-        s(:qnat) => :qnat,
-        empt => :qlist,
-        cons(:qnat, :qlist) => :qnelist,
-        :qnelist => :qlist
+      @automaton = LibTree::Automaton::new( system: mod4, states: [qnat, qlist, qnelist], final_states: [qnelist], rules: {
+        zero => qnat,
+        s(qnat) => qnat,
+        empt => qlist,
+        cons(qnat, qlist) => qnelist,
+        qnelist => qlist
       } )
     end
     @a4 = @m4.automaton
 
-    mod5 = LibTree::define_system( alphabet: {f: 1, g: 1, a: 0}, variables: [])
+    mod5 = LibTree::define_system( alphabet: {f: 1, g: 1, a: 0}, states: [:q0, :q1, :q2, :q3, :q4])
     @m5 = Module::new do
       extend mod5
       class << self
         attr_reader :automaton
       end
-      @automaton = LibTree::Automaton::new( system: mod5, states: [:q0, :q1, :q2, :q3, :q4], final_states: [:q2, :q3], rules: {
-        a => :q0,
-        f(:q0) => :q1,
-        g(:q0) => :q3,
-        f(:q1) => :q1,
-        g(:q1) => :q2,
-        f(:q2) => :q4,
-        g(:q2) => :q4,
-        f(:q3) => :q4,
-        g(:q3) => :q4,
-        f(:q4) => :q4,
-        g(:q4) => :q4
+      @automaton = LibTree::Automaton::new( system: mod5, states: [q0, q1, q2, q3, q4], final_states: [q2, q3], rules: {
+        a => q0,
+        f(q0) => q1,
+        g(q0) => q3,
+        f(q1) => q1,
+        g(q1) => q2,
+        f(q2) => q4,
+        g(q2) => q4,
+        f(q3) => q4,
+        g(q3) => q4,
+        f(q4) => q4,
+        g(q4) => q4
       } )
     end
     @a5 = @m5.automaton
@@ -107,23 +107,23 @@ class TestAutomaton < Minitest::Test
       class << self
         attr_reader :automaton, :automaton_bu, :tree_true, :tree_false
       end
-      @automaton = LibTree::TopDownAutomaton::new( system: mod6, states: [:q0, :q1, :q2], initial_states: [:q0], rules: {
+      @automaton = LibTree::TopDownAutomaton::new( system: mod6, states: [q0, q1, q2], initial_states: [q0], rules: {
         q0(nill) => nill,
-        q0(zero(:x)) => zero(q0()),
-        q0( one(:x)) =>  one(q1()),
-        q1(zero(:x)) => zero(q2()),
-        q1( one(:x)) =>  one(q0()),
-        q2(zero(:x)) => zero(q1()),
-        q2( one(:x)) =>  one(q2())
+        q0(zero(:x)) => zero(q0),
+        q0( one(:x)) =>  one(q1),
+        q1(zero(:x)) => zero(q2),
+        q1( one(:x)) =>  one(q0),
+        q2(zero(:x)) => zero(q1),
+        q2( one(:x)) =>  one(q2)
       } )
-      @automaton_bu = LibTree::Automaton::new( system: mod6, states: [:q0, :q1, :q2], final_states: [:q0], rules: {
-        nill => :q0,
-        zero(:q0) => :q0,
-        one(:q1) => :q0,
-        zero(:q2) => :q1,
-        one(:q0) => :q1,
-        zero(:q1) => :q2,
-        one(:q2) => :q2
+      @automaton_bu = LibTree::Automaton::new( system: mod6, states: [q0, q1, q2], final_states: [q0], rules: {
+        nill => q0,
+        zero(q0) => q0,
+        one(q1) => q0,
+        zero(q2) => q1,
+        one(q0) => q1,
+        zero(q1) => q2,
+        one(q2) => q2
       } )
       @tree_true = one(one(zero(nill)))
       @tree_false = one(zero(nill))
@@ -203,7 +203,7 @@ EOF
   def test_epsilon_rules
     assert(@a4.epsilon_rules?)
     assert_equal( 1, @a4.epsilon_rules.size)
-    assert_equal( [:qnelist, [:qlist]], @a4.epsilon_rules.first)
+    assert_equal( [@m4.qnelist, [@m4.qlist]], @a4.epsilon_rules.first)
     refute(@a4.deterministic?)
     assert_equal( <<EOF, @a4.remove_epsilon_rules.to_s )
 <Automaton:
@@ -237,10 +237,10 @@ EOF
   def test_automaton
     k, v = @a.rules.first
     assert_equal( @m.zero, k )
-    assert_equal( [:q0], v )
+    assert_equal( [@m.q0], v )
     k, v = @a.rules.reverse_each.first
-    assert_equal( LibTree::Automaton::RuleSet::compute_rule(@m.o(:q1,:q1)), k )
-    assert_equal( [:q1], v )
+    assert_equal( LibTree::Automaton::RuleSet::compute_rule(@m.o(@m.q1,@m.q1)), k )
+    assert_equal( [@m.q1], v )
     assert_equal( 44, @a.size )
     assert( @a.deterministic? )
     assert( @a.complete? )
@@ -253,7 +253,7 @@ EOF
     assert( @a2.complete.complete? )
     refute_equal( @a2.complete, @a2 )
     refute( @a2.reduced? )
-    assert_equal( Set[:q0, :q1], @a2.reduce.states )
+    assert_equal( Set[@m.q0, @m.q1], @a2.reduce.states )
     assert_equal( 3, @a2.reduce.rules.size )
     refute( @a2.epsilon_rules? )
   end
@@ -262,8 +262,8 @@ EOF
     refute( @a3.deterministic? )
     d = @a3.determinize
     assert( d.deterministic? )
-    assert_equal( Set[ Set[:q], Set[:q, :qg], Set[:q, :qg, :qf] ], d.states )
-    assert_equal( Set[ Set[:q, :qg, :qf] ], d.final_states )
+    assert_equal( Set[ LibTree::Term::new(Set[:q]), LibTree::Term::new(Set[:q, :qg]), LibTree::Term::new(Set[:q, :qg, :qf]) ], d.states )
+    assert_equal( Set[ LibTree::Term::new(Set[:q, :qg, :qf]) ], d.final_states )
     assert_equal( 13, d.rules.size )
   end
 

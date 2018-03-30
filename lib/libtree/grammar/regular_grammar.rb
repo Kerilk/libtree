@@ -14,9 +14,6 @@ module LibTree
         previously_productive = productive.dup
         @rules.each { |k, v|
           v.each { |p|
-            if p.kind_of?(CaptureState)
-              p = p.state
-            end
             prod = true
             p.each { |c|
               prod = false unless previously_productive.include?( c ) || (@terminals.alphabet.include?(c.symbol) && @terminals.alphabet[c.symbol] == c.arity)
@@ -36,9 +33,6 @@ module LibTree
         previously_reachable.each { |r|
           v = @rules[r]
           v.each { |p|
-            if p.kind_of?(CaptureState)
-              p = p.state
-            end
             p.each { |c|
               reachable.add(c) if @non_terminals.alphabet.include?(c.symbol) && @non_terminals.alphabet[c.symbol] == c.arity
             }
@@ -66,13 +60,8 @@ module LibTree
       @rules.each { |k, v|
         next unless nt.include?( k )
         v.each { |p|
-          if p.kind_of?(CaptureState)
-            new_p = p.state
-          else
-            new_p = p
-          end
           keep = true
-          new_p.each { |c|
+          p.each { |c|
             keep = false unless nt.include?( c ) || (@terminals.alphabet.include?(c.symbol) && @terminals.alphabet[c.symbol] == c.arity)
           }
           r.append(k, p) if keep
@@ -102,17 +91,9 @@ module LibTree
         }
         v.each { |p|
           np = p.dup
-          cap = nil
-          if np.kind_of?(CaptureState)
-            cap = np.capture_group.dup
-            np = np.state
-          end
           np.each { |n|
            n.set_symbol translate_table[ [n.symbol, n.arity] ] if translate_table.include?( [n.symbol, n.arity] )
           }
-          if cap
-            np = CaptureState::new(np, cap)
-          end
           r.append(nk, np)
         }
       }
@@ -134,13 +115,8 @@ module LibTree
         @rules = RuleSet::new
         previous_rules.each { |k, v|
           v.each { |p|
-            if p.kind_of?(CaptureState)
-              new_p = p.state
-            else
-              new_p = p
-            end
-            if new_p.arity > 0
-              new_p.children.collect! { |c|
+            if p.arity > 0
+              p.children.collect! { |c|
                 unless c.kind_of?(Square) || nts.include?(c)
                   new_name = "new_nt_#{counter}".to_sym
                   new_term = Term::new(new_name)
@@ -164,19 +140,12 @@ module LibTree
         @rules = RuleSet::new
         previous_rules.each { |k, v|
           v.each { |p|
-            cap = nil
-            if p.kind_of?(CaptureState)
-              new_p = p.state
-              cap = p.capture_group
-            else
-              new_p = p
-            end
-            if nts.include?(new_p)
-              v2 = previous_rules[new_p]
+            cap = p.capture
+            if nts.include?(p)
+              v2 = previous_rules[p]
               v2.each { |p2|
-                if cap
-                  p2 = CaptureState::new( p2, cap )
-                end
+                new_p2 = p2.dup
+                p2.set_capture(cap)
                 @rules.append(k, p2)
               }
             else
@@ -199,22 +168,15 @@ module LibTree
 
     def top_down_automaton!
       normalize!
-      nts_states_map = @non_terminals.alphabet.collect { |k, a| [ Term::new(k), "#{k}".to_sym ] }.to_h
+      nts_states_map = @non_terminals.alphabet.collect { |k, a| [ Term::new(k), Term::new(State::new("#{k}".to_sym)) ] }.to_h
       states = nts_states_map.values
       r = RuleSet::new
       @rules.each { |k,v|
-        s = nts_states_map[k]
+        s = nts_states_map[k].symbol
         v.each { |p|
-          cap = nil
-          if p.kind_of?(CaptureState)
-            cap = p.capture_group.dup
-            p = p.state
-          end
+          cap = p.capture
           new_k = Term::new(s, Term::new( p.symbol, * p.arity.times.collect { |i| "x#{i}".to_sym } ))
-          new_p = Term::new( p.symbol, * p.children.collect { |c| Term::new(nts_states_map[c]) } )
-          if cap
-            new_p = CaptureState::new( new_p, cap )
-          end
+          new_p = Term::new( p.symbol, * p.children.collect { |c| Term::new(nts_states_map[c].symbol) }, capture: cap )
           r.append(new_k, new_p)
         }
       }
@@ -227,22 +189,16 @@ module LibTree
 
     def bottom_up_automaton!
       normalize!
-      nts_states_map = @non_terminals.alphabet.collect { |k, a| [ Term::new(k), "#{k}".to_sym ] }.to_h
+      nts_states_map = @non_terminals.alphabet.collect { |k, a| [ Term::new(k), Term::new(State::new("#{k}".to_sym)) ] }.to_h
       states = nts_states_map.values
       r = RuleSet::new
       @rules.each { |k,v|
         s = nts_states_map[k]
         v.each { |p|
-          cap = nil
-          if p.kind_of?(CaptureState)
-            cap = p.capture_group.dup
-            p = p.state
-          end
+          cap = p.capture
           new_p = Term::new( p.symbol, * p.children.collect { |c| nts_states_map[c] } )
-          new_s = s
-          if cap
-            new_s = CaptureState::new( new_s, cap )
-          end
+          new_s = s.dup
+          new_s.set_capture(cap)
           r.append( new_p, new_s)
         }
       }

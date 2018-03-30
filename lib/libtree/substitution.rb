@@ -24,11 +24,13 @@ module LibTree
       return @rules.collect { |k,v| k unless k == v }.compact.to_set
     end
 
-    def [](term)
+    def [](term, keep_capture: false)
       if @rules[term]
-        return @rules[term].dup
+        t = @rules[term].dup
+        t.set_capture(term.capture) if keep_capture
+        return t
       else
-        if term.kind_of?(Term) || term.kind_of?(CaptureState)
+        if term.kind_of?(Term)
           return term * self
         else
           return term.dup

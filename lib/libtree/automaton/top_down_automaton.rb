@@ -14,10 +14,7 @@ module LibTree
         s = self[node]
         if s
           s = s.sample
-          if s.kind_of? CaptureState
-            cap = s.capture_group
-            s = s.state
-          end
+          cap = s.capture
           node.set_symbol s.symbol
           if capture && cap
             cap.each { |position, name|
@@ -44,7 +41,7 @@ module LibTree
         @automaton = automaton
         initial = @automaton.rules[nil].sample
         @initial_tree = tree.dup
-        @tree = tree.class::new(initial, tree.dup)
+        @tree = Term::new(initial.symbol, tree.dup)
         @state = @tree.each(automaton.order)
         @rewrite = rewrite
       end
@@ -91,16 +88,9 @@ EOF
       @rules.each { |k, v|
         next unless k
         v.each { |p|
-          cap = nil
-          if p.kind_of?(CaptureState)
-            cap = p.capture_group.dup
-            p = p.state
-          end
+          cap = p.capture
           new_k = Term::new(p.symbol, * p.children.collect { |c| c } )
-          new_p = k.symbol
-          if cap
-            new_p = CaptureState::new(new_p, cap)
-          end
+          new_p = Term::new(k.symbol, capture: cap)
           new_rules.append(new_k, new_p)
         }
       }
@@ -108,22 +98,15 @@ EOF
     end
 
     def to_grammar(axiom = nil)
-      axiom = Term::new( @initial_states.first ) unless axiom
-      non_terminals = LibTree::define_system( alphabet: @states.collect { |s| [s, 0] }.to_h )
+      axiom = Term::new( @initial_states.first.symbol.to_sym ) unless axiom
+      non_terminals = LibTree::define_system( alphabet: @states.collect { |s| [s.symbol.to_sym, 0] }.to_h )
       new_rules = RegularGrammar::RuleSet::new
       @rules.each { |k,v|
         next unless k
         v.each { |p|
-          cap = nil
-          if p.kind_of?(CaptureState)
-            cap = p.capture_group.dup
-            p = p.state
-          end
-          new_k = Term::new( k.symbol )
-          new_p = Term::new( p.symbol, *p.children.collect { |c| c.kind_of?(Term) ? c.dup : Term::new(c) } )
-          if cap
-            new_p = CaptureState::new( new_p, cap )
-          end
+          cap = p.capture
+          new_k = Term::new( k.symbol.to_sym )
+          new_p = Term::new( p.symbol.to_sym, *p.children.collect { |c| c.dup }, capture: cap )
           new_rules.append(new_k, new_p)
         }
       }

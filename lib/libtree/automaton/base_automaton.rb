@@ -33,9 +33,8 @@ module LibTree
       end #Rule
 
       def self.compute_rule(key)
-        return key if key.kind_of?(Symbol)
         r = Rule::new(key.symbol)
-        r.children.push *key.children.collect { |c| c.kind_of?(Term) ? c.symbol : c }
+        r.children.push *key.children.collect { |c| c.kind_of?(Term) ? c.to_var : Variable::new(c) }
         r
       end
 
@@ -72,14 +71,8 @@ module LibTree
         s = self[node]
         if s
           s = s.sample
-          cap = nil
-          if s.kind_of? CaptureState
-            cap = s.capture_group
-            s = s.state
-          end
-          if s.kind_of? Term
-            s = s.symbol
-          end
+          cap = s.capture
+          s = s.symbol
           if rewrite
             node.set_symbol s
             if capture && cap
@@ -138,7 +131,7 @@ module LibTree
       end
 
       def successful?
-        @automaton.final_states.include?(@tree.root)
+        @automaton.final_states.include?(Term::new(@tree.root))
       end
 
       def run

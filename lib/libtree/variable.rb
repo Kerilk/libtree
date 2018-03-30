@@ -1,6 +1,7 @@
 module LibTree
 
   class Variable < Term
+    using RefineSet
 
     def height
       0
