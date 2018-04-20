@@ -5,6 +5,7 @@ require_relative 'libtree/term'
 require_relative 'libtree/substitution'
 require_relative 'libtree/homomorphism'
 require_relative 'libtree/automaton'
+require_relative 'libtree/grammar'
 
 module LibTree
 

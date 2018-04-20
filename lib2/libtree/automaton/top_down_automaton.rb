@@ -89,15 +89,14 @@ EOF
     end
 
     def to_grammar(axiom = nil)
-      axiom = Term::new( @initial_states.first.symbol.to_sym ) unless axiom
-      non_terminals = LibTree::define_system( alphabet: @states.collect { |s| [s.symbol.to_sym, 0] }.to_h )
+      axiom = Term::new( @initial_states.first.to_sym ) unless axiom
+      non_terminals = LibTree::define_system( alphabet: @states.collect { |s| [s.to_sym, 0] }.to_h )
       new_rules = RegularGrammar::RuleSet::new
       @rules.each { |k,v|
         next unless k
         v.each { |p|
-          cap = p.capture
-          new_k = Term::new( k.symbol.to_sym )
-          new_p = Term::new( p.symbol.to_sym, *p.children.collect { |c| c.dup }, capture: cap )
+          new_k = Term::new( k.state )
+          new_p = Term::new( p.symbol, *p.children.collect { |c| Term::new( c.dup ) } )
           new_rules.append(new_k, new_p)
         }
       }

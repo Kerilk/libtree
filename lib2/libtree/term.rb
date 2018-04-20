@@ -190,6 +190,10 @@ module LibTree
     attr_accessor :state
     attr_reader :variable
 
+    def set_symbol(symbol)
+      @symbol = symbol
+    end
+
     def state?
       return !!state
     end
