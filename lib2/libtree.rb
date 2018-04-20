@@ -6,6 +6,7 @@ require_relative 'libtree/substitution'
 require_relative 'libtree/homomorphism'
 require_relative 'libtree/automaton'
 require_relative 'libtree/grammar'
+require_relative 'libtree/regular_expression'
 
 module LibTree
 
@@ -21,8 +22,8 @@ module LibTree
         case m
         when /x\d+/
           Term::new(m.to_sym, variable: true)
-#        when /sq\d*/
-#          Square::new(m.to_sym)
+        when /sq\d*/
+          Square::new(m.to_sym)
         else
           super
         end

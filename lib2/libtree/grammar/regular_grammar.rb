@@ -117,7 +117,7 @@ module LibTree
           v.each { |p|
             if p.arity > 0
               p.children.collect! { |c|
-                unless nts.include?(c) # || c.kind_of?(Square)
+                unless nts.include?(c) || c.kind_of?(Square)
                   new_name = "new_nt_#{counter}".to_sym
                   new_term = Term::new(new_name)
                   nts.add(new_term)
