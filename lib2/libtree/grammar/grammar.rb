@@ -3,7 +3,7 @@ module LibTree
   class Grammar
     using RefineSet
 
-    class RuleSet < Hash
+    class RuleSet < BaseRuleSet
 
       def apply(node)
         s = self[node]
@@ -13,29 +13,6 @@ module LibTree
           node.children.replace( s.children.collect { |c| c.dup } )
         end
         self
-      end
-
-      def to_s(separator = ", ")
-        "<RuleSet: #{rules_to_s(separator)}>"
-      end
-
-      def rules_to_s(separator = ", ")
-        "#{collect{ |k,v| "#{k} -> #{v.length > 1 ? "[#{v.join(", ")}]" : v.first.to_s}" }.join(separator)}"
-      end
-
-      def append(key, value)
-        value = [value] unless value.kind_of?(Array)
-        if self.include?(key)
-          old_value = self[key]
-          self[key] = (old_value + value).uniq
-        else
-          self[key] = value
-        end
-      end
-
-      def []=(key,value)
-        raise "invalid rule!" unless value.kind_of?(Array)
-        super(key, value)
       end
 
     end #RuleSet

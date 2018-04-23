@@ -22,7 +22,7 @@ module LibTree
     end
 
     # Ground rewrite rule set
-    class RuleSet < Hash
+    class RuleSet < BaseRuleSet
 
       class Rule < Term
 
@@ -42,33 +42,8 @@ module LibTree
         r
       end
 
-      def to_s(separator = ", ")
-        "<RuleSet: #{rules_to_s(separator)}>"
-      end
-
-      def rules_to_s(separator = ", ")
-        "#{collect{ |k,v| "#{k} -> #{v.length > 1 ? "[#{v.join(", ")}]" : v.first.to_s}" }.join(separator)}"
-      end
-
-      def include?(key)
-        super(self.class::compute_rule(key))
-      end
-
-      def [](key)
-        super(self.class::compute_rule(key))
-      end
-
-      def []=(key,value)
-        raise "invalid rule!" unless value.kind_of?(Array)
-        super(self.class::compute_rule(key), value)
-      end
-
-      def delete(key)
-        super(self.class::compute_rule(key))
-      end
-
       def rules_size
-        collect { |k,v| k.size * v.size }.inject(&:+)
+        @hash.collect { |k,v| k.size * v.size }.inject(&:+)
       end
 
       def apply(node)
@@ -79,16 +54,6 @@ module LibTree
           node.state = s
         end
         self
-      end
-
-      def append(key, value)
-        value = [value] unless value.kind_of?(Array)
-        if self.include?(key)
-          old_value = self[key]
-          self[key] = (old_value + value).uniq
-        else
-          self[key] = value
-        end
       end
 
     end #RuleSet
