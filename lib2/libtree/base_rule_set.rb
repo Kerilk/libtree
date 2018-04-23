@@ -65,7 +65,23 @@ module LibTree
     end
 
     def each(&block)
-      @hash.each(&block)
+      if block
+        @hash.each(&block)
+      else
+        to_enum(:each)
+      end
+    end
+
+    def each_rule(&block)
+      if block
+        @hash.each { |k,v|
+          v.each { |r|
+            block.call(k,r)
+          }
+        }
+      else
+        to_enum(:each_rule)
+      end
     end
 
     def select(&block)

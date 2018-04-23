@@ -77,13 +77,11 @@ EOF
 
     def to_bottom_up_automaton
       new_rules = RuleSet::new
-      @rules.each { |k, v|
+      @rules.each_rule { |k, p|
         next unless k
-        v.each { |p|
-          new_k = Term::new(p.symbol, * p.children.collect { |c| c } )
-          new_p = k.state
-          new_rules.append(new_k, new_p)
-        }
+        new_k = Term::new(p.symbol, * p.children.collect { |c| c } )
+        new_p = k.state
+        new_rules.append(new_k, new_p)
       }
       Automaton::new(system: @system, states: @states.dup, final_states: @initial_states, rules: new_rules)
     end
@@ -92,13 +90,11 @@ EOF
       axiom = Term::new( @initial_states.first.to_sym ) unless axiom
       non_terminals = LibTree::define_system( alphabet: @states.collect { |s| [s.to_sym, 0] }.to_h )
       new_rules = RegularGrammar::RuleSet::new
-      @rules.each { |k,v|
+      @rules.each_rule { |k, p|
         next unless k
-        v.each { |p|
-          new_k = Term::new( k.state )
-          new_p = Term::new( p.symbol, *p.children.collect { |c| Term::new( c.dup ) } )
-          new_rules.append(new_k, new_p)
-        }
+        new_k = Term::new( k.state )
+        new_p = Term::new( p.symbol, *p.children.collect { |c| Term::new( c.dup ) } )
+        new_rules.append(new_k, new_p)
       }
       RegularGrammar::new(axiom: axiom, non_terminals: non_terminals, terminals: @system, rules: new_rules)
     end

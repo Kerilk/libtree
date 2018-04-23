@@ -12,14 +12,12 @@ module LibTree
       productive = Set[]
       loop do
         previously_productive = productive.dup
-        @rules.each { |k, v|
-          v.each { |p|
-            prod = true
-            p.each { |c|
-              prod = false unless previously_productive.include?( c ) || (@terminals.alphabet.include?(c.symbol) && @terminals.alphabet[c.symbol] == c.arity)
-            }
-            productive.add(k) if prod
+        @rules.each_rule { |k, p|
+          prod = true
+          p.each { |c|
+            prod = false unless previously_productive.include?( c ) || (@terminals.alphabet.include?(c.symbol) && @terminals.alphabet[c.symbol] == c.arity)
           }
+          productive.add(k) if prod
         }
         break if previously_productive == productive
       end
@@ -57,15 +55,13 @@ module LibTree
 
     def restrict_rules( nt )
       r = RuleSet::new
-      @rules.each { |k, v|
+      @rules.each_rule { |k, p|
         next unless nt.include?( k )
-        v.each { |p|
-          keep = true
-          p.each { |c|
-            keep = false unless nt.include?( c ) || (@terminals.alphabet.include?(c.symbol) && @terminals.alphabet[c.symbol] == c.arity)
-          }
-          r.append(k, p) if keep
+        keep = true
+        p.each { |c|
+          keep = false unless nt.include?( c ) || (@terminals.alphabet.include?(c.symbol) && @terminals.alphabet[c.symbol] == c.arity)
         }
+        r.append(k, p) if keep
       }
       r
     end
@@ -113,24 +109,22 @@ module LibTree
         previous_non_terminals = nts.dup
         previous_rules = @rules
         @rules = RuleSet::new
-        previous_rules.each { |k, v|
-          v.each { |p|
-            if p.arity > 0
-              p.children.collect! { |c|
-                unless nts.include?(c) || c.kind_of?(Square)
-                  new_name = "new_nt_#{counter}".to_sym
-                  new_term = Term::new(new_name)
-                  nts.add(new_term)
-                  @rules.append(new_term, c)
-                  counter += 1
-                  new_term.dup
-                else
-                  c
-                end
-              }
-            end
-            @rules.append(k, p)
-          }
+        previous_rules.each_rule { |k, p|
+          if p.arity > 0
+            p.children.collect! { |c|
+              unless nts.include?(c) || c.kind_of?(Square)
+                new_name = "new_nt_#{counter}".to_sym
+                new_term = Term::new(new_name)
+                nts.add(new_term)
+                @rules.append(new_term, c)
+                counter += 1
+                new_term.dup
+              else
+                c
+              end
+            }
+          end
+          @rules.append(k, p)
         }
         break if nts == previous_non_terminals
       end
@@ -138,18 +132,16 @@ module LibTree
       loop do
         previous_rules = @rules
         @rules = RuleSet::new
-        previous_rules.each { |k, v|
-          v.each { |p|
-            if nts.include?(p)
-              v2 = previous_rules[p]
-              v2.each { |p2|
-                new_p2 = p2.dup
-                @rules.append(k, p2)
-              }
-            else
-              @rules.append(k, p)
-            end
-          }
+        previous_rules.each_rule { |k, p|
+          if nts.include?(p)
+            v2 = previous_rules[p]
+            v2.each { |p2|
+              new_p2 = p2.dup
+              @rules.append(k, p2)
+            }
+          else
+            @rules.append(k, p)
+          end
         }
         break if previous_rules == @rules
       end
@@ -169,13 +161,11 @@ module LibTree
       nts_states_map = @non_terminals.alphabet.collect { |k, a| [ Term::new(k), "#{k}".to_sym ] }.to_h
       states = nts_states_map.values
       r = RuleSet::new
-      @rules.each { |k,v|
+      @rules.each_rule { |k, p|
         s = nts_states_map[k]
-        v.each { |p|
-          new_k = Term::new( p.symbol, * p.arity.times.collect { |i| "x#{i}".to_sym }, state: s )
-          new_p = Term::new( p.symbol, * p.children.collect { |c| nts_states_map[c] } )
-          r.append(new_k, new_p)
-        }
+        new_k = Term::new( p.symbol, * p.arity.times.collect { |i| "x#{i}".to_sym }, state: s )
+        new_p = Term::new( p.symbol, * p.children.collect { |c| nts_states_map[c] } )
+        r.append(new_k, new_p)
       }
       LibTree::TopDownAutomaton::new(system: @terminals, states: states, initial_states: [ nts_states_map[@axiom] ], rules: r)
     end
@@ -189,12 +179,10 @@ module LibTree
       nts_states_map = @non_terminals.alphabet.collect { |k, a| [ Term::new(k), "#{k}".to_sym ] }.to_h
       states = nts_states_map.values
       r = RuleSet::new
-      @rules.each { |k,v|
+      @rules.each_rule { |k, p|
         s = nts_states_map[k]
-        v.each { |p|
-          new_p = Term::new( p.symbol, * p.children.collect { |c| nts_states_map[c] } )
-          r.append( new_p, s )
-        }
+        new_p = Term::new( p.symbol, * p.children.collect { |c| nts_states_map[c] } )
+        r.append( new_p, s )
       }
       LibTree::Automaton::new(system: @terminals, states: states, final_states: [ nts_states_map[@axiom] ], rules: r)
     end
