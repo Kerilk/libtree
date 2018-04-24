@@ -87,9 +87,26 @@ EOF
     end
 
     def to_grammar(axiom = nil)
-      axiom = Term::new( @initial_states.first.to_sym ) unless axiom
-      non_terminals = LibTree::define_system( alphabet: @states.collect { |s| [s.to_sym, 0] }.to_h )
+      alpha = @states.collect { |s| [s.to_sym, 0] }.to_h
       new_rules = RegularGrammar::RuleSet::new
+      unless axiom
+        if @initial_states.size > 1
+          axiom = :__new_axiom
+          i = 0
+          while @states.include? axiom
+            axiom = :"__new_axiom#{i}"
+            i += 1
+          end
+          alpha[axiom] = 0
+          axiom = Term::new( axiom )
+          @initial_states.each { |s|
+            new_rules.append(axiom, Term::new( s.to_sym ) )
+          }
+        else
+          axiom = Term::new( @initial_states.first.to_sym )
+        end
+      end
+      non_terminals = LibTree::define_system( alphabet: alpha )
       @rules.each_rule { |k, p|
         next unless k
         new_k = Term::new( k.state )
