@@ -59,28 +59,35 @@ module LibTree
         end
 
         def run
-          @successful = false
-          rs = @automaton.rules[@tree]
-          return @successful unless rs
-          rs.each { |s|
-            old_state = @tree.state
-            @tree.state = nil
-            @successful = @tree.children.each_with_index.reduce(true) { |res, (c, i)|
-              c.state = s.children[i]
-              res = res && NDTopDownRunInner::new(@automaton, c).run
-              c.state = nil
-              res
-            }
-            @tree.state  = old_state
-            return @successful if @successful
-          }
-          return @successful
+          @successful = recurse(@tree)
         end
 
         def successful?
           return run if @successful.nil?
           return @successful
         end
+
+        private
+
+        def recurse(t)
+          successful = false
+          rs = @automaton.rules[t]
+          return successful unless rs
+          rs.each { |s|
+            old_state = t.state
+            t.state = nil
+            successful = t.children.each_with_index.reduce(true) { |res, (c, i)|
+              c.state = s.children[i]
+              res = res && recurse(c)
+              c.state = nil
+              res
+            }
+            t.state = old_state
+            return successful if successful
+          }
+          return successful
+        end
+
       end
 
       def initialize(automaton, tree)

@@ -14,27 +14,33 @@ module LibTree
         end
 
         def run
+          recurse(@tree)
+        end
+
+        private
+
+        def recurse(t)
           possible_states = []
           children_states = []
-          @tree.children.each { |c|
-            child_states = NDRunInner::new(@automaton, c).run
+          t.children.each { |c|
+            child_states = recurse(c)
             return possible_states if child_states == []
             children_states.push child_states
           }
           if children_states != []
             children_product_states = children_states.first.product(*children_states[1..-1])
             children_product_states.each { |cs|
-              @tree.children.each_with_index { |c, i|
+              t.children.each_with_index { |c, i|
                 c.state = cs[i]
               }
-              rs = @automaton.rules[@tree]
+              rs = @automaton.rules[t]
               possible_states += rs if rs
             }
-            @tree.children.each { |c|
+            t.children.each { |c|
               c.state = nil
             }
           else
-            rs = @automaton.rules[@tree]
+            rs = @automaton.rules[t]
             possible_states += rs if rs
           end
           possible_states
@@ -44,7 +50,7 @@ module LibTree
 
       def initialize(automaton, tree)
         tree.clear_states
-        @automaton = automaton.remove_epsilon_rules
+        @automaton = automaton
         @tree = tree
         @successful = nil
       end
