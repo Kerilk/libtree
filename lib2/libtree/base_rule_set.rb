@@ -108,6 +108,10 @@ module LibTree
       @hash.size
     end
 
+    def empty?
+      @hash.size == 0
+    end
+
   end
 
 end

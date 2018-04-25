@@ -108,11 +108,8 @@ EOF
 
     def remove_epsilon_rules!
       e_r = epsilon_rules
-      return self if epsilon_rules.empty?
+      return self if e_r.empty?
 
-      non_epsilon_rules = @rules.reject { |k, v|
-        k.state?
-      }
       epsilon_closures = @states.collect { |s| [s, Set[s.dup]] }
       loop do
         previous_epsilon_closures = epsilon_closures.collect { |s, c| [s, c.dup] }
@@ -141,11 +138,15 @@ EOF
     end
 
     def epsilon_rules
-      @rules.select { |k, v|
+      @rules.select { |k, _|
         k.state?
-      }.collect { |k, v|
-        [k.state, v]
-      }.to_h
+      }
+    end
+
+    def non_epsilon_rules
+      @rules.reject { |k, _|
+        k.state?
+      }
     end
 
     def epsilon_rules?

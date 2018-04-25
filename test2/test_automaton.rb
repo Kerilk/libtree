@@ -203,7 +203,7 @@ EOF
   def test_epsilon_rules
     assert(@a4.epsilon_rules?)
     assert_equal( 1, @a4.epsilon_rules.size)
-    assert_equal( [@m4.qnelist, [@m4.qlist]], @a4.epsilon_rules.first)
+    assert_equal( [LibTree::BaseAutomaton::RuleSet::Rule::new(nil, state: @m4.qnelist), [@m4.qlist]], @a4.epsilon_rules.first)
     refute(@a4.deterministic?)
     assert_equal( <<EOF, @a4.remove_epsilon_rules.to_s )
 <Automaton:
