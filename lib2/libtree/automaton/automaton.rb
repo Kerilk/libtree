@@ -27,9 +27,14 @@ module LibTree
 
     def to_top_down_automaton
       new_rules = RuleSet::new
-      @rules.each_rule { |k, p|
+      non_epsilon_rules.each_rule { |k, p|
         new_k = Term::new(k.symbol, state: p)
         new_p = Term::new(k.symbol, * k.children.collect { |c| c.state } )
+        new_rules.append(new_k, new_p)
+      }
+      epsilon_rules.each_rule { |k, p|
+        new_k = Term::new(nil, state: p)
+        new_p = k.state
         new_rules.append(new_k, new_p)
       }
       TopDownAutomaton::new(system: @system, states: @states.dup, initial_states: @final_states.dup, rules: new_rules)
@@ -106,6 +111,22 @@ EOF
     end
     alias & intersection
 
+    def epsilon_rules
+      @rules.select { |k, _|
+        k.state?
+      }
+    end
+
+    def non_epsilon_rules
+      @rules.reject { |k, _|
+        k.state?
+      }
+    end
+
+    def epsilon_rules?
+      ! epsilon_rules.empty?
+    end
+
     def remove_epsilon_rules!
       e_r = epsilon_rules
       return self if e_r.empty?
@@ -126,7 +147,7 @@ EOF
       non_epsilon_rules.each_rule { |k, s|
         states = epsilon_closures[s].to_a
         states.each { |st|
-          new_rules.append(k,st)
+          new_rules.append(k, st)
         }
       }
       @rules = new_rules
@@ -135,22 +156,6 @@ EOF
 
     def remove_epsilon_rules
       dup.remove_epsilon_rules!
-    end
-
-    def epsilon_rules
-      @rules.select { |k, _|
-        k.state?
-      }
-    end
-
-    def non_epsilon_rules
-      @rules.reject { |k, _|
-        k.state?
-      }
-    end
-
-    def epsilon_rules?
-      ! epsilon_rules.empty?
     end
 
     def ==(other)

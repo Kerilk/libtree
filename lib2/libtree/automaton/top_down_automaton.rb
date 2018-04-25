@@ -75,13 +75,44 @@ module LibTree
 EOF
     end
 
+    def epsilon_rules
+      @rules.select { |k, _|
+        k && k.state? && k.symbol == nil
+      }
+    end
+
+    def non_epsilon_rules
+      @rules.reject { |k, _|
+        k && k.state? && k.symbol == nil
+      }
+    end
+
+    def epsilon_rules?
+      ! epsilon_rules.empty?
+    end
+
+    def remove_epsilon_rules!
+      a = remove_epsilon_rules
+      @rules = a.rules
+      return self
+    end
+
+    def remove_epsilon_rules
+      a = to_bottom_up_automaton
+      a.remove_epsilon_rules!
+      a.to_top_down_automaton
+    end
+
     def to_bottom_up_automaton
       new_rules = RuleSet::new
-      @rules.each_rule { |k, p|
+      non_epsilon_rules.each_rule { |k, p|
         next unless k
         new_k = Term::new(p.symbol, * p.children.collect { |c| c } )
         new_p = k.state
         new_rules.append(new_k, new_p)
+      }
+      epsilon_rules.each_rule { |k, p|
+        new_rules.append(p, k.state)
       }
       Automaton::new(system: @system, states: @states.dup, final_states: @initial_states, rules: new_rules)
     end

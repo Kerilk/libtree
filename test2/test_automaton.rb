@@ -201,6 +201,20 @@ EOF
   end
 
   def test_epsilon_rules
+    assert_equal( <<EOF, @a4.to_s )
+<Automaton:
+  system: <System: aphabet: {cons(,), s(), zero, empt}>
+  states: {qnat, qlist, qnelist}
+  final_states: {qnelist}
+  order: post
+  rules:
+    zero -> qnat
+    s(qnat) -> qnat
+    empt -> qlist
+    cons(qnat,qlist) -> qnelist
+    qnelist -> qlist
+>
+EOF
     assert(@a4.epsilon_rules?)
     assert_equal( 1, @a4.epsilon_rules.size)
     assert_equal( [LibTree::BaseAutomaton::RuleSet::Rule::new(nil, state: @m4.qnelist), [@m4.qlist]], @a4.epsilon_rules.first)
@@ -232,6 +246,26 @@ EOF
     cons(qr0,qr2) -> qr2
 >
 EOF
+    a4td = @a4.to_top_down_automaton
+    assert_equal( <<EOF, a4td.to_s )
+<Automaton:
+  system: <System: aphabet: {cons(,), s(), zero, empt}>
+  states: {qnat, qlist, qnelist}
+  initial_states: {qnelist}
+  order: pre
+  rules:
+    qnat(zero) -> zero
+    qnat(s) -> s(qnat)
+    qlist(empt) -> empt
+    qnelist(cons) -> cons(qnat,qlist)
+    qlist -> qnelist
+     -> qnelist
+>
+EOF
+    assert( a4td.epsilon_rules? )
+    assert_equal( 1 , a4td.epsilon_rules.size )
+    assert_equal( [LibTree::BaseAutomaton::RuleSet::Rule::new(nil, state: @m4.qlist), [@m4.qnelist]], a4td.epsilon_rules.first)
+    assert_equal( @a4.remove_epsilon_rules.to_top_down_automaton.to_s, a4td.remove_epsilon_rules.to_s )
   end
 
   def test_automaton
