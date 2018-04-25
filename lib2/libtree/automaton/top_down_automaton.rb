@@ -85,7 +85,7 @@ module LibTree
 
       def initialize(automaton, tree)
         tree.clear_states
-        @automaton = automaton.remove_epsilon_rules
+        @automaton = automaton
         @tree = tree
         @successful = nil
       end
@@ -217,7 +217,8 @@ EOF
       RegularGrammar::new(axiom: axiom, non_terminals: non_terminals, terminals: @system, rules: new_rules)
     end
 
-    def run(tree, rewrite: true)
+    def run(tree)
+      return remove_epsilon_rules.run(tree) if epsilon_rules?
       return NDTopDownRun::new(self, tree) unless deterministic?
       TopDownRun::new(self, tree)
     end

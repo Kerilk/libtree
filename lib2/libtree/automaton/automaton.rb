@@ -4,6 +4,67 @@ module LibTree
     using RefineSet
     using RefineSymbol
 
+    class NDRun
+
+      class NDRunInner
+
+        def initialize(automaton, tree)
+          @automaton = automaton
+          @tree = tree
+        end
+
+        def run
+          possible_states = []
+          children_states = []
+          @tree.children.each { |c|
+            child_states = NDRunInner::new(@automaton, c).run
+            return possible_states if child_states == []
+            children_states.push child_states
+          }
+          if children_states != []
+            children_product_states = children_states.first.product(*children_states[1..-1])
+            children_product_states.each { |cs|
+              @tree.children.each_with_index { |c, i|
+                c.state = cs[i]
+              }
+              rs = @automaton.rules[@tree]
+              possible_states += rs if rs
+            }
+            @tree.children.each { |c|
+              c.state = nil
+            }
+          else
+            rs = @automaton.rules[@tree]
+            possible_states += rs if rs
+          end
+          possible_states
+        end
+
+      end
+
+      def initialize(automaton, tree)
+        tree.clear_states
+        @automaton = automaton.remove_epsilon_rules
+        @tree = tree
+        @successful = nil
+      end
+
+      def run
+        @successful = false
+        possible_states = NDRunInner::new(@automaton, @tree).run
+        possible_states.each { |s|
+          @successful = true if @automaton.final_states.include?(s)
+        }
+        @successful
+      end
+
+      def successful?
+        return run if @successful.nil?
+        return @successful
+      end
+
+    end
+
     attr_reader :final_states
 
     @order = :post
@@ -54,6 +115,8 @@ EOF
     end
 
     def run(tree)
+      return remove_epsilon_rules.run(tree) if epsilon_rules?
+      return NDRun::new(self, tree) unless deterministic?
       Run::new(self, tree)
     end
 

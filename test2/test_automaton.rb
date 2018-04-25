@@ -68,6 +68,8 @@ class TestAutomaton < Minitest::Test
       extend mod4
       class << self
         attr_reader :automaton
+        attr_reader :treet
+        attr_reader :treef
       end
       @automaton = LibTree::Automaton::new( system: mod4, states: [qnat, qlist, qnelist], final_states: [qnelist], rules: {
         zero => qnat,
@@ -76,8 +78,12 @@ class TestAutomaton < Minitest::Test
         cons(qnat, qlist) => qnelist,
         qnelist => qlist
       } )
+      @treet = cons(zero, cons(s(s(zero)), empt))
+      @treef = empt
     end
     @a4 = @m4.automaton
+    @t4t = @m4.treet
+    @t4f = @m4.treef
 
     mod5 = LibTree::define_system( alphabet: {f: 1, g: 1, a: 0}, states: [:q0, :q1, :q2, :q3, :q4])
     @m5 = Module::new do
@@ -521,6 +527,16 @@ EOF
     r2 = atd.run @t2
     assert(r2.run)
     assert(r2.successful?)
+  end
+
+  def test_non_deterministic_bu_automaton
+    a4nd = @a4.remove_epsilon_rules
+    r = a4nd.run @t4t
+    assert(r.run)
+    assert(r.successful?)
+    r2 = a4nd.run @t4f
+    refute(r2.run)
+    refute(r2.successful?)
   end
 
 end
