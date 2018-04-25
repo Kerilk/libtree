@@ -29,17 +29,85 @@ module LibTree
     class TopDownRun < Run
 
       def initialize(automaton, tree)
+        tree.clear_states
         @automaton = automaton
-        @tree = tree.dup
+        @tree = tree
         @state = @tree.each(automaton.order)
         @tree.state = @automaton.rules[nil].sample
+        @successful = nil
       end
 
       def successful?
-        @tree.each { |t|
-          return false if t.state
+        if @successful.nil?
+          @successful = true
+          @tree.each { |t|
+            @successful = false if t.state
+          }
+          @tree.clear_states
+        end
+        @successful 
+      end
+
+    end
+
+    class NDTopDownRun
+      class NDTopDownRunInner
+        def initialize(automaton, tree)
+          @automaton = automaton
+          @tree = tree
+          @successful = nil
+        end
+
+        def run
+          @successful = false
+          rs = @automaton.rules[@tree]
+          return @successful unless rs
+          rs.each { |s|
+            old_state = @tree.state
+            @tree.state = nil
+            @successful = @tree.children.each_with_index.reduce(true) { |res, (c, i)|
+              c.state = s.children[i]
+              res = res && NDTopDownRunInner::new(@automaton, c).run
+              c.state = nil
+              res
+            }
+            @tree.state  = old_state
+            return @successful if @successful
+          }
+          return @successful
+        end
+
+        def successful?
+          return run if @successful.nil?
+          return @successful
+        end
+      end
+
+      def initialize(automaton, tree)
+        tree.clear_states
+        @automaton = automaton.remove_epsilon_rules
+        @tree = tree
+        @successful = nil
+      end
+
+      def run
+        @successful = false
+        @automaton.rules[nil].each { |s|
+          @tree.state = s
+          if NDTopDownRunInner::new(@automaton, @tree).run
+            @successful = true
+            @tree.state = nil
+            return @successful
+          else
+            @tree.state = nil
+          end
         }
-        return true
+        @successful
+      end
+
+      def successful?
+        return run if @successful.nil?
+        return @successful
       end
 
     end
@@ -92,12 +160,14 @@ EOF
     end
 
     def remove_epsilon_rules!
+      return self unless epsilon_rules?
       a = remove_epsilon_rules
       @rules = a.rules
       return self
     end
 
     def remove_epsilon_rules
+      dup unless epsilon_rules?
       a = to_bottom_up_automaton
       a.remove_epsilon_rules!
       a.to_top_down_automaton
@@ -148,14 +218,8 @@ EOF
     end
 
     def run(tree, rewrite: true)
+      return NDTopDownRun::new(self, tree) unless deterministic?
       TopDownRun::new(self, tree)
-    end
-
-    def deterministic?
-      rules.each { |k,v|
-        return false if v.length > 1
-      }
-      true
     end
 
   end

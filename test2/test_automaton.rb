@@ -176,7 +176,7 @@ EOF
     assert_raises( StopIteration ) { r2.move }
     r2 = @a6.run @t6f
     refute( r2.run )
-    assert_equal( "one(zero(q2(nill)))", r2.tree.to_s )
+    assert_equal( "one(zero(nill))", r2.tree.to_s )
 
     r3 = @a6bu.run @t6t
     assert( r3.run )
@@ -487,11 +487,39 @@ EOF
   def test_run
     r = @a.run @t
     refute(r.run)
-    assert_equal( "q0(a(n(o(zero,one)),o(one,n(zero))))" , r.tree.to_s)
+    assert_equal( "a(n(o(zero,one)),o(one,n(zero)))" , r.tree.to_s)
     refute(r.successful?)
     r2 = @a.run @t2
     assert(r2.run)
-    assert_equal( "q1(a(n(n(o(zero,one))),o(one,n(zero))))" , r2.tree.to_s)
+    assert_equal( "a(n(n(o(zero,one))),o(one,n(zero)))" , r2.tree.to_s)
+    assert(r2.successful?)
+  end
+
+  def test_non_deterministic_td_automaton
+    atd = @a.to_top_down_automaton
+    assert_equal( <<EOF, atd.to_s )
+<Automaton:
+  system: <System: aphabet: {o(,), a(,), n(), one, zero}>
+  states: {q0, q1}
+  initial_states: {q1}
+  order: pre
+  rules:
+    q0(zero) -> zero
+    q1(one) -> one
+    q1(n) -> n(q0)
+    q0(n) -> n(q1)
+    q0(a) -> [a(q0,q0), a(q1,q0), a(q0,q1)]
+    q1(a) -> a(q1,q1)
+    q0(o) -> o(q0,q0)
+    q1(o) -> [o(q1,q0), o(q0,q1), o(q1,q1)]
+     -> q1
+>
+EOF
+    r = atd.run @t
+    refute(r.run)
+    refute(r.successful?)
+    r2 = atd.run @t2
+    assert(r2.run)
     assert(r2.successful?)
   end
 

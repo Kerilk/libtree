@@ -168,14 +168,6 @@ EOF
       self.class::new( system: @system, states: @states.to_a, final_states: @final_states.to_a, rules: @rules )
     end
 
-    def deterministic?
-      return false if epsilon_rules?
-      rules.each { |_,v|
-        return false if v.length > 1
-      }
-      true
-    end
-
     def complete?
       @system.alphabet.each { |sym, arity|
         @states.to_a.repeated_permutation(arity) { |perm|

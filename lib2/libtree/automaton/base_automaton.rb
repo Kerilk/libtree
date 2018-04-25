@@ -62,9 +62,11 @@ module LibTree
       attr_reader :tree
 
       def initialize(automaton, tree)
+        tree.clear_states
         @automaton = automaton.remove_epsilon_rules
-        @tree = tree.dup
+        @tree = tree
         @state = @tree.each(automaton.order)
+        @successful = nil
       end
 
       def move
@@ -74,7 +76,11 @@ module LibTree
       end
 
       def successful?
-        @automaton.final_states.include?(tree.state)
+        if @successful.nil?
+          @successful = @automaton.final_states.include?(@tree.state)
+          @tree.clear_states
+        end
+        @successful
       end
 
       def run
@@ -99,6 +105,14 @@ module LibTree
 
     def order
       self.class.order
+    end
+
+    def deterministic?
+      return false if epsilon_rules?
+      rules.each { |_,v|
+        return false if v.length > 1
+      }
+      true
     end
 
   end
