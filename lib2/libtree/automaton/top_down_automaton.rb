@@ -10,14 +10,21 @@ module LibTree
         super
       end
 
-      def apply(node)
+      def apply(node, capture)
         s = self[node]
         if s
-          s = s.sample.rhs
+          s = s.sample
           node.state = nil
           node.children.each_with_index { |c, i|
-            c.state = s.children[i]
+            c.state = s.rhs.children[i]
           }
+          if s.capture
+            s.capture.each { |position, name|
+              child = node.children.first.children[position]
+              raise "Invalid capture position: #{position} for #{node}!" if child.nil?
+              capture[name].push child
+            }
+          end
         else
           raise StopIteration
         end
@@ -35,6 +42,7 @@ module LibTree
         @state = @tree.each(automaton.order)
         @tree.state = @automaton.rules[nil].sample.rhs
         @successful = nil
+        @capture = Hash::new { |hash, key| hash[key] = [] }
       end
 
       def successful?
