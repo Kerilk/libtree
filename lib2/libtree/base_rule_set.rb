@@ -25,7 +25,7 @@ module LibTree
       end
 
       def to_s
-        @rhs.to_s
+        "#{@rhs.to_s}#{@capture ? "(#{@capture})" : ""}"
       end
 
       def dup

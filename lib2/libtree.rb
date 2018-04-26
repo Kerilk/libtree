@@ -83,11 +83,15 @@ module LibTree
         eval <<EOF
   def #{name}(*children, **opts)
     raise "Invalid child number: \#{children.length}, expected #{arity}" if children.length != #{arity}
-    Term::new(#{name.inspect}, *children, **opts)
+    t = Term::new(#{name.inspect}, *children)
+    t = BaseRuleSet::Rule::new(t, opts[:capture]) if opts[:capture]
+    t
   end
   def self.#{name}(*children, **opts)
     raise "Invalid child number: \#{children.length}, expected #{arity}" if children.length != #{arity}
-    Term::new(#{name.inspect}, *children, **opts)
+    t = Term::new(#{name.inspect}, *children)
+    t = BaseRuleSet::Rule::new(t, opts[:capture]) if opts[:capture]
+    t
   end
 EOF
       }
@@ -105,23 +109,25 @@ EOF
 
       @states.each_with_index { |state|
         eval <<EOF
-    def #{state}( term = nil )
+    def #{state}(term = nil, **opts)
       if term
         t = term.dup
         t.state = #{state.inspect}
-        t
       else
-        #{state.inspect}
+        t = #{state.inspect}
       end
+      t = BaseRuleSet::Rule::new(t, opts[:capture]) if opts[:capture]
+      t
     end
-    def self.#{state}( term = nil )
+    def self.#{state}(term = nil, **opts)
       if term
         t = term.dup
         t.state = #{state.inspect}
-        t
       else
-        #{state.inspect}
+        t = #{state.inspect}
       end
+      t = BaseRuleSet::Rule::new(t, opts[:capture]) if opts[:capture]
+      t
     end
 EOF
       }

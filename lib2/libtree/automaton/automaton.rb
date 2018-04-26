@@ -94,15 +94,15 @@ module LibTree
 
     def to_top_down_automaton
       new_rules = RuleSet::new
-      non_epsilon_rules.each_rule { |k, p|
+      non_epsilon_rules.each_rule { |k, p, cap|
         new_k = Term::new(k.symbol, state: p)
         new_p = Term::new(k.symbol, * k.children.collect { |c| c.state } )
-        new_rules.append(new_k, new_p)
+        new_rules.append(new_k, new_p, cap)
       }
-      epsilon_rules.each_rule { |k, p|
+      epsilon_rules.each_rule { |k, p, cap|
         new_k = Term::new(nil, state: p)
         new_p = k.state
-        new_rules.append(new_k, new_p)
+        new_rules.append(new_k, new_p, cap)
       }
       TopDownAutomaton::new(system: @system, states: @states.dup, initial_states: @final_states.dup, rules: new_rules)
     end
@@ -135,8 +135,8 @@ EOF
       new_states = Set::new(@states.collect{ |s| state_mapping[s]})
       new_final_states = Set::new(@final_states.collect{ |s| state_mapping[s]})
       new_rules = RuleSet::new
-      @rules.each_rule { |k, p|
-        new_rules.append(k.rename_states(state_mapping), state_mapping[p])
+      @rules.each_rule { |k, p, cap|
+        new_rules.append(k.rename_states(state_mapping), state_mapping[p], cap)
       }
       @states = new_states
       @final_states = new_final_states
@@ -213,10 +213,10 @@ EOF
       end
       epsilon_closures = epsilon_closures.to_h
       new_rules = RuleSet::new
-      non_epsilon_rules.each_rule { |k, s|
+      non_epsilon_rules.each_rule { |k, s, cap|
         states = epsilon_closures[s].to_a
         states.each { |st|
-          new_rules.append(k, st)
+          new_rules.append(k, st, cap)
         }
       }
       @rules = new_rules

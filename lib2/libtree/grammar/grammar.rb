@@ -5,12 +5,19 @@ module LibTree
 
     class RuleSet < BaseRuleSet
 
-      def apply(node)
+      def apply(node, capture)
         s = self[node]
         if s
           s = s.sample
           node.set_symbol s.rhs.symbol
           node.children.replace( s.rhs.children.collect { |c| c.dup } )
+          if s.capture
+            s.capture.each { |position, name|
+              child = node.children[position]
+              raise "Invalid capture position: #{position} for #{node}!" if child.nil?
+              capture[name].push child
+            }
+          end
         end
         self
       end
@@ -25,11 +32,12 @@ module LibTree
         @grammar = grammar
         @tree = grammar.axiom.dup
         @state = @tree.each(:pre)
+        @capture = Hash::new { |hash, key| hash[key] = [] }
       end
 
       def derive
         node = @state.peek
-        @grammar.rules.apply(node)
+        @grammar.rules.apply(node, @capture)
         @state.next
         return self
       end
@@ -42,6 +50,10 @@ module LibTree
         rescue StopIteration
         end
         @tree
+      end
+
+      def matches
+        @capture
       end
 
     end #Derivation

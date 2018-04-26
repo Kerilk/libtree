@@ -72,10 +72,7 @@ module LibTree
         nt_alphabet[:base_nt0] = 0
         non_terminals = LibTree::define_system( alphabet: nt_alphabet )
         axiom = non_terminals.base_nt0
-        if capture_group != {}
-          new_re = CaptureState::new(new_re, capture_group)
-        end
-        rules.append(axiom, new_re)
+        rules.append(axiom, new_re, capture_group)
         return RegularGrammar::new(axiom: axiom, non_terminals: non_terminals, terminals: terminals, rules: rules).normalize!.rename_non_terminals
       else
         return re.to_grammar

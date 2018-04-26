@@ -46,12 +46,19 @@ module LibTree
         @hash.collect { |k,v| k.size * v.size }.inject(&:+)
       end
 
-      def apply(node)
+      def apply(node, capture)
         s = self[node]
         if s
-          s = s.sample.rhs
+          s = s.sample
           node.children.each { |c| c.state = nil }
-          node.state = s
+          node.state = s.rhs
+          if s.capture
+            s.capture.each { |position, name|
+              child = node.children[position]
+              raise "Invalid capture position: #{position} for #{node}!" if child.nil?
+              capture[name].push child
+            }
+          end
         end
         self
       end
@@ -67,11 +74,12 @@ module LibTree
         @tree = tree
         @state = @tree.each(automaton.order)
         @successful = nil
+        @capture = Hash::new { |hash, key| hash[key] = [] }
       end
 
       def move
         node = @state.next
-        @automaton.rules.apply(node)
+        @automaton.rules.apply(node, @capture)
         return self
       end
 
@@ -91,6 +99,10 @@ module LibTree
         rescue StopIteration
         end
         successful?
+      end
+
+      def matches
+        return @capture
       end
 
     end

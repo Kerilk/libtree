@@ -52,14 +52,14 @@ module LibTree
 
     class NDTopDownRun
       class NDTopDownRunInner
-        def initialize(automaton, tree)
+        def initialize(automaton, tree, capture)
           @automaton = automaton
           @tree = tree
           @successful = nil
         end
 
         def run
-          @successful = recurse(@tree)
+          @successful, @capture = recurse(@tree)
         end
 
         def successful?
@@ -71,39 +71,61 @@ module LibTree
 
         def recurse(t)
           successful = false
+          capture = Hash::new { |hash, key| hash[key] = [] }
           rs = @automaton.rules[t]
-          return successful unless rs
+          return successful, capture unless rs
           rs.each { |s|
             old_state = t.state
             t.state = nil
-            successful = t.children.each_with_index.reduce(true) { |res, (c, i)|
-              c.state = s.rhs.children[i]
-              res = res && recurse(c)
-              c.state = nil
+            successful, children_cap = t.children.each_with_index.reduce([true, Hash::new { |hash, key| hash[key] = [] }]) { |res, (c, i)|
+              if res[0]
+                c.state = s.rhs.children[i]
+                succ, cap = recurse(c)
+                cap.each { |k, v|
+                  res[1][k] += v
+                }
+                res[0] = res[0] && succ
+                c.state = nil
+              end
               res
             }
             t.state = old_state
-            return successful if successful
+            if successful
+              if s.capture
+                s.capture.each { |k, v|
+                  capture[v].push t.children[k]
+                }
+                children_cap.each { |k, v|
+                  capture[k] += v
+                }
+              end
+              return successful, capture
+            end
           }
-          return successful
+          return successful, capture
         end
 
       end
+
+      attr_reader :capture
 
       def initialize(automaton, tree)
         tree.clear_states
         @automaton = automaton
         @tree = tree
         @successful = nil
+        @capture = {}
       end
 
       def run
         @successful = false
         @automaton.rules[nil].each { |s|
           @tree.state = s.rhs
-          if NDTopDownRunInner::new(@automaton, @tree).run
+          succ, cap = NDTopDownRunInner::new(@automaton, @tree, @capture).run
+          if succ
             @successful = true
             @tree.state = nil
+            @capture = cap
             return @successful
           else
             @tree.state = nil
@@ -115,6 +137,10 @@ module LibTree
       def successful?
         return run if @successful.nil?
         return @successful
+      end
+
+      def matches
+        return @capture
       end
 
     end
@@ -182,14 +208,14 @@ EOF
 
     def to_bottom_up_automaton
       new_rules = RuleSet::new
-      non_epsilon_rules.each_rule { |k, p|
+      non_epsilon_rules.each_rule { |k, p, cap|
         next unless k
         new_k = Term::new(p.symbol, * p.children.collect { |c| c } )
         new_p = k.state
-        new_rules.append(new_k, new_p)
+        new_rules.append(new_k, new_p, cap)
       }
-      epsilon_rules.each_rule { |k, p|
-        new_rules.append(p, k.state)
+      epsilon_rules.each_rule { |k, p, cap|
+        new_rules.append(p, k.state, cap)
       }
       Automaton::new(system: @system, states: @states.dup, final_states: @initial_states, rules: new_rules)
     end
@@ -215,11 +241,11 @@ EOF
         end
       end
       non_terminals = LibTree::define_system( alphabet: alpha )
-      @rules.each_rule { |k, p|
+      @rules.each_rule { |k, p, cap|
         next unless k
         new_k = Term::new( k.state )
         new_p = Term::new( p.symbol, *p.children.collect { |c| Term::new( c.dup ) } )
-        new_rules.append(new_k, new_p)
+        new_rules.append(new_k, new_p, cap)
       }
       RegularGrammar::new(axiom: axiom, non_terminals: non_terminals, terminals: @system, rules: new_rules)
     end
