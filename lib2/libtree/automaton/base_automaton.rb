@@ -24,20 +24,20 @@ module LibTree
     # Ground rewrite rule set
     class RuleSet < BaseRuleSet
 
-      class Rule < Term
+      class Key < Term
 
         def size
           arity + 2
         end
 
-      end #Rule
+      end #Key
 
-      def self.compute_rule(key)
+      def self.compute_key(key)
         if key.kind_of?(Term)
-          r = Rule::new(key.symbol, state: key.state)
+          r = Key::new(key.symbol, state: key.state)
           r.children.push *key.children.collect { |c| c.kind_of?(Term) ? c.to_state : Term::new(nil, state: c) } unless r.state?
         else
-          r = Rule::new(nil, state: key)
+          r = Key::new(nil, state: key)
         end
         r
       end
@@ -49,7 +49,7 @@ module LibTree
       def apply(node)
         s = self[node]
         if s
-          s = s.sample
+          s = s.sample.rhs
           node.children.each { |c| c.state = nil }
           node.state = s
         end

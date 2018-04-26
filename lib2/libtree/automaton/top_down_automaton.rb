@@ -5,7 +5,7 @@ module LibTree
 
     class TopDownRuleSet < RuleSet
 
-      def self.compute_rule(key)
+      def self.compute_key(key)
         return key if key.nil?
         super
       end
@@ -13,7 +13,7 @@ module LibTree
       def apply(node)
         s = self[node]
         if s
-          s = s.sample
+          s = s.sample.rhs
           node.state = nil
           node.children.each_with_index { |c, i|
             c.state = s.children[i]
@@ -33,7 +33,7 @@ module LibTree
         @automaton = automaton
         @tree = tree
         @state = @tree.each(automaton.order)
-        @tree.state = @automaton.rules[nil].sample
+        @tree.state = @automaton.rules[nil].sample.rhs
         @successful = nil
       end
 
@@ -77,7 +77,7 @@ module LibTree
             old_state = t.state
             t.state = nil
             successful = t.children.each_with_index.reduce(true) { |res, (c, i)|
-              c.state = s.children[i]
+              c.state = s.rhs.children[i]
               res = res && recurse(c)
               c.state = nil
               res
@@ -100,7 +100,7 @@ module LibTree
       def run
         @successful = false
         @automaton.rules[nil].each { |s|
-          @tree.state = s
+          @tree.state = s.rhs
           if NDTopDownRunInner::new(@automaton, @tree).run
             @successful = true
             @tree.state = nil
@@ -134,7 +134,7 @@ module LibTree
           @rules.append(k.dup, p.dup)
         }
       }
-      @rules[nil] = @initial_states.to_a
+      @rules[nil] = @initial_states.to_a.collect{ |s| TopDownRuleSet::Rule::new(s) }
     end
 
     def to_s

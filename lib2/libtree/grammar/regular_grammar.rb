@@ -31,7 +31,7 @@ module LibTree
         previously_reachable.each { |r|
           v = @rules[r]
           v.each { |p|
-            p.each { |c|
+            p.rhs.each { |c|
               reachable.add(c) if @non_terminals.alphabet.include?(c.symbol) && @non_terminals.alphabet[c.symbol] == c.arity
             }
           }
@@ -80,18 +80,16 @@ module LibTree
         translate_table[[s,a]] = nnt
       }
       r = RuleSet::new
-      @rules.each { |k,v|
+      @rules.each_rule { |k, p|
         nk = k.dup
         nk.each { |n|
           n.set_symbol translate_table[ [n.symbol, n.arity] ] if translate_table.include?( [n.symbol, n.arity] )
         }
-        v.each { |p|
-          np = p.dup
-          np.each { |n|
-           n.set_symbol translate_table[ [n.symbol, n.arity] ] if translate_table.include?( [n.symbol, n.arity] )
-          }
-          r.append(nk, np)
+        np = p.dup
+        np.each { |n|
+         n.set_symbol translate_table[ [n.symbol, n.arity] ] if translate_table.include?( [n.symbol, n.arity] )
         }
+        r.append(nk, np)
       }
       @non_terminals = LibTree::define_system( alphabet: new_non_terminals )
       @rules = r
@@ -110,6 +108,7 @@ module LibTree
         previous_rules = @rules
         @rules = RuleSet::new
         previous_rules.each_rule { |k, p|
+          p previous_rules if p.kind_of?(Array)
           if p.arity > 0
             p.children.collect! { |c|
               unless nts.include?(c) || c.kind_of?(Square)

@@ -223,7 +223,7 @@ EOF
 EOF
     assert(@a4.epsilon_rules?)
     assert_equal( 1, @a4.epsilon_rules.size)
-    assert_equal( [LibTree::BaseAutomaton::RuleSet::Rule::new(nil, state: @m4.qnelist), [@m4.qlist]], @a4.epsilon_rules.first)
+    assert_equal( [LibTree::BaseAutomaton::RuleSet::Key::new(nil, state: @m4.qnelist), [LibTree::BaseAutomaton::RuleSet::Rule::new(@m4.qlist)]], @a4.epsilon_rules.first)
     refute(@a4.deterministic?)
     assert_equal( <<EOF, @a4.remove_epsilon_rules.to_s )
 <Automaton:
@@ -238,7 +238,21 @@ EOF
     cons(qnat,qlist) -> [qnelist, qlist]
 >
 EOF
-    assert_equal( <<EOF,  @a4.determinize.rename_states.to_s )
+    assert_equal( <<EOF, @a4.determinize.to_s )
+<Automaton:
+  system: <System: aphabet: {cons(,), s(), zero, empt}>
+  states: {{qnat}, {qlist}, {qnelist, qlist}}
+  final_states: {{qnelist, qlist}}
+  order: post
+  rules:
+    zero -> {qnat}
+    empt -> {qlist}
+    cons({qnat},{qlist}) -> {qnelist, qlist}
+    s({qnat}) -> {qnat}
+    cons({qnat},{qnelist, qlist}) -> {qnelist, qlist}
+>
+EOF
+    assert_equal( <<EOF, @a4.determinize.rename_states.to_s )
 <Automaton:
   system: <System: aphabet: {cons(,), s(), zero, empt}>
   states: {qr0, qr1, qr2}
@@ -270,18 +284,19 @@ EOF
 EOF
     assert( a4td.epsilon_rules? )
     assert_equal( 1 , a4td.epsilon_rules.size )
-    assert_equal( [LibTree::BaseAutomaton::RuleSet::Rule::new(nil, state: @m4.qlist), [@m4.qnelist]], a4td.epsilon_rules.first)
+    assert_equal( [LibTree::BaseAutomaton::RuleSet::Key::new(nil, state: @m4.qlist), [LibTree::BaseAutomaton::RuleSet::Rule::new(@m4.qnelist)]], a4td.epsilon_rules.first)
     assert_equal( @a4.remove_epsilon_rules.to_top_down_automaton.to_s, a4td.remove_epsilon_rules.to_s )
   end
 
   def test_automaton
     k, v = @a.rules.first
     assert_equal( @m.zero, k )
-    assert_equal( [@m.q0], v )
+    assert_equal( [@m.q0], v.collect(&:rhs) )
     k, v = @a.rules.reverse_each.first
-    assert_equal( LibTree::Automaton::RuleSet::compute_rule(@m.o(@m.q1,@m.q1)), k )
-    assert_equal( [@m.q1], v )
+    assert_equal( LibTree::Automaton::RuleSet::compute_key(@m.o(@m.q1,@m.q1)), k )
+    assert_equal( [@m.q1], v.collect(&:rhs) )
     assert_equal( 44, @a.size )
+    assert_equal( @a, @a.dup )
     assert( @a.deterministic? )
     assert( @a.complete? )
     assert( @a.reduced? )

@@ -9,8 +9,8 @@ module LibTree
         s = self[node]
         if s
           s = s.sample
-          node.set_symbol s.symbol
-          node.children.replace( s.children.collect { |c| c.dup } )
+          node.set_symbol s.rhs.symbol
+          node.children.replace( s.rhs.children.collect { |c| c.dup } )
         end
         self
       end
@@ -54,7 +54,10 @@ module LibTree
       @terminals = terminals.dup
       @rules =  RuleSet::new
       rules.each { |k, v|
-        @rules.append(k.dup, v.collect { |p| p.dup })
+        v = [v] unless v.kind_of?(Array)
+        v.each { |p|
+          @rules.append(k.dup, p.dup)
+        }
       }
     end
 

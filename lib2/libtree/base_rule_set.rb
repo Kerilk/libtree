@@ -4,6 +4,36 @@ module LibTree
     using RefineSet
     include Enumerable
 
+    class Rule
+
+      attr_reader :rhs
+      attr_reader :capture
+
+      def initialize(rhs, capture = nil)
+        @rhs = rhs
+        @capture = capture
+      end
+
+      def ==(other)
+        other.kind_of?(self.class) && ( @rhs == other.rhs ) && ( @capture == other.capture )
+      end
+
+      alias eql? ==
+
+      def to_a
+        [ @rhs, @capture ]
+      end
+
+      def to_s
+        @rhs.to_s
+      end
+
+      def dup
+        self.class::new(@rhs.dup, @capture)
+      end
+
+    end #Rule
+
     def initialize
       @hash = {}
     end
@@ -24,7 +54,7 @@ module LibTree
       @hash.hash
     end
 
-    def self.compute_rule(key)
+    def self.compute_key(key)
       key
     end
 
@@ -37,30 +67,36 @@ module LibTree
     end
 
     def include?(key)
-      @hash.include?(self.class::compute_rule(key))
+      @hash.include?(self.class::compute_key(key))
     end
 
     def [](key)
-      @hash[self.class::compute_rule(key)]
+      @hash[self.class::compute_key(key)]
     end
 
     def []=(key,value)
       raise "invalid rule!" unless value.kind_of?(Array)
-      @hash[self.class::compute_rule(key)] = value
+      @hash[self.class::compute_key(key)] = value
     end
 
     def delete(key, &block)
-      @hash.delete(self.class::compute_rule(key), &block)
+      @hash.delete(self.class::compute_key(key), &block)
     end
 
-    def append(key, value)
-      value = [value] unless value.kind_of?(Array)
-      key = self.class::compute_rule(key)
-      if @hash.include?(key)
-        old_value = @hash[key]
-        @hash[key] = (old_value + value).uniq
+    def append(key, value, capture = nil)
+      key = self.class::compute_key(key)
+      if value.kind_of?(Rule)
+        rule = value
       else
-        @hash[key] = value
+        rule = Rule::new(value, capture)
+      end
+      if @hash.include?(key)
+        arr = @hash[key]
+        arr.push rule
+        arr.uniq!
+        @hash[key] = arr
+      else
+        @hash[key] = [rule]
       end
     end
 
@@ -76,7 +112,7 @@ module LibTree
       if block
         @hash.each { |k,v|
           v.each { |r|
-            block.call(k,r)
+            block.call(k, *r)
           }
         }
       else
