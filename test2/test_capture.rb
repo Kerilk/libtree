@@ -63,8 +63,8 @@ class TestCapture < Minitest::Test
     zero -> qnat
     s(qnat) -> qnat
     empt -> qlist
-    cons(qnat,qlist) -> qnelist({0=>:first_nat})
-    cons(qnat,qnelist) -> qnelist({0=>:other_nat})
+    cons(qnat,qlist) -> qnelist{0=>:first_nat}
+    cons(qnat,qnelist) -> qnelist{0=>:other_nat}
 >
 EOF
     r = @a1.run(@t1)
@@ -86,8 +86,8 @@ EOF
     zero -> qr0
     s(qr0) -> qr0
     empt -> qr1
-    cons(qr0,qr1) -> qr2({0=>:first_nat})
-    cons(qr0,qr2) -> qr2({0=>:other_nat})
+    cons(qr0,qr1) -> qr2{0=>:first_nat}
+    cons(qr0,qr2) -> qr2{0=>:other_nat}
 >
 EOF
     assert_equal( <<EOF, @a1.to_grammar.to_s )
@@ -98,7 +98,7 @@ EOF
   rules:
     qnat -> [zero, s(qnat)]
     qlist -> empt
-    qnelist -> [cons(qnat,qlist)({0=>:first_nat}), cons(qnat,qnelist)({0=>:other_nat})]
+    qnelist -> [cons(qnat,qlist){0=>:first_nat}, cons(qnat,qnelist){0=>:other_nat}]
 >
 EOF
     r = @a1.to_grammar.bottom_up_automaton.run(@t1)
@@ -122,7 +122,7 @@ EOF
     qnat(zero) -> zero
     qnat(s) -> s(qnat)
     qlist(empt) -> empt
-    qnelist(cons) -> [cons(qnat,qlist)({0=>:first_nat}), cons(qnat,qnelist)({0=>:other_nat})]
+    qnelist(cons) -> [cons(qnat,qlist){0=>:first_nat}, cons(qnat,qnelist){0=>:other_nat}]
      -> qnelist
 >
 EOF
@@ -165,7 +165,7 @@ EOF
   rules:
     qnat -> [zero, s(qnat)]
     qlist -> empt
-    qnelist -> [cons(qnat,qlist)({0=>:first_nat}), cons(qnat,qnelist)({0=>:other_nat})]
+    qnelist -> [cons(qnat,qlist){0=>:first_nat}, cons(qnat,qnelist){0=>:other_nat}]
 >
 EOF
     assert_equal( <<EOF, g.dup.rename_non_terminals.to_s )
@@ -176,7 +176,7 @@ EOF
   rules:
     nt_0 -> [zero, s(nt_0)]
     nt_1 -> empt
-    nt_2 -> [cons(nt_0,nt_1)({0=>:first_nat}), cons(nt_0,nt_2)({0=>:other_nat})]
+    nt_2 -> [cons(nt_0,nt_1){0=>:first_nat}, cons(nt_0,nt_2){0=>:other_nat}]
 >
 EOF
   end
@@ -192,7 +192,7 @@ EOF
     zero -> qnat
     s(qnat) -> qnat
     empt -> qlist
-    cons(qnat,qlist) -> qnelist({0=>:nat})
+    cons(qnat,qlist) -> qnelist{0=>:nat}
     qnelist -> qlist
 >
 EOF
@@ -206,7 +206,7 @@ EOF
     zero -> qnat
     s(qnat) -> qnat
     empt -> qlist
-    cons(qnat,qlist) -> [qnelist({0=>:nat}), qlist({0=>:nat})]
+    cons(qnat,qlist) -> [qnelist{0=>:nat}, qlist{0=>:nat}]
 >
 EOF
   end
