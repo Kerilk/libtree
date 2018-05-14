@@ -55,7 +55,7 @@ class TestCapture < Minitest::Test
   def test_capture_bu_automaton
     assert_equal( <<EOF, @a1.to_s )
 <Automaton:
-  system: <System: aphabet: {cons(,), s(), zero, empt}>
+  system: <System: alphabet: {cons(,), s(), zero, empt}>
   states: {qnat, qlist, qnelist}
   final_states: {qnelist}
   order: post
@@ -78,7 +78,7 @@ EOF
     assert_equal( @a2.to_s, @a1.to_top_down_automaton.to_s )
     assert_equal( <<EOF, @a1.dup.rename_states.to_s )
 <Automaton:
-  system: <System: aphabet: {cons(,), s(), zero, empt}>
+  system: <System: alphabet: {cons(,), s(), zero, empt}>
   states: {qr0, qr1, qr2}
   final_states: {qr2}
   order: post
@@ -93,8 +93,8 @@ EOF
     assert_equal( <<EOF, @a1.to_grammar.to_s )
 <Grammar:
   axiom: qnelist
-  non_terminals: <System: aphabet: {qnat, qlist, qnelist}>
-  terminals: <System: aphabet: {cons(,), s(), zero, empt}>
+  non_terminals: <System: alphabet: {qnat, qlist, qnelist}>
+  terminals: <System: alphabet: {cons(,), s(), zero, empt}>
   rules:
     qnat -> [zero, s(qnat)]
     qlist -> empt
@@ -114,7 +114,7 @@ EOF
   def test_capture_td_automaton
     assert_equal( <<EOF, @a2.to_s )
 <Automaton:
-  system: <System: aphabet: {cons(,), s(), zero, empt}>
+  system: <System: alphabet: {cons(,), s(), zero, empt}>
   states: {qnat, qlist, qnelist}
   initial_states: {qnelist}
   order: pre
@@ -160,8 +160,8 @@ EOF
     assert_equal( <<EOF, g.to_s )
 <Grammar:
   axiom: qnelist
-  non_terminals: <System: aphabet: {qnat, qlist, qnelist}>
-  terminals: <System: aphabet: {cons(,), s(), zero, empt}>
+  non_terminals: <System: alphabet: {qnat, qlist, qnelist}>
+  terminals: <System: alphabet: {cons(,), s(), zero, empt}>
   rules:
     qnat -> [zero, s(qnat)]
     qlist -> empt
@@ -171,8 +171,8 @@ EOF
     assert_equal( <<EOF, g.dup.rename_non_terminals.to_s )
 <Grammar:
   axiom: nt_2
-  non_terminals: <System: aphabet: {nt_0, nt_1, nt_2}>
-  terminals: <System: aphabet: {cons(,), s(), zero, empt}>
+  non_terminals: <System: alphabet: {nt_0, nt_1, nt_2}>
+  terminals: <System: alphabet: {cons(,), s(), zero, empt}>
   rules:
     nt_0 -> [zero, s(nt_0)]
     nt_1 -> empt
@@ -184,7 +184,7 @@ EOF
   def test_bottom_up_capture_with_epsilon
     assert_equal( <<EOF, @a3.to_s )
 <Automaton:
-  system: <System: aphabet: {cons(,), s(), zero, empt}>
+  system: <System: alphabet: {cons(,), s(), zero, empt}>
   states: {qnat, qlist, qnelist}
   final_states: {qnelist}
   order: post
@@ -198,7 +198,7 @@ EOF
 EOF
     assert_equal( <<EOF, @a3.remove_epsilon_rules.to_s )
 <Automaton:
-  system: <System: aphabet: {cons(,), s(), zero, empt}>
+  system: <System: alphabet: {cons(,), s(), zero, empt}>
   states: {qnat, qlist, qnelist}
   final_states: {qnelist}
   order: post

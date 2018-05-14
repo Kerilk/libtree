@@ -59,8 +59,8 @@ class TestRegularExpression < Minitest::Test
     assert_equal( <<EOF, g2.reduce.to_s )
 <Grammar:
   axiom: qr0
-  non_terminals: <System: aphabet: {qr0, qr1}>
-  terminals: <System: aphabet: {void, s(), zero, cons(,)}>
+  non_terminals: <System: alphabet: {qr0, qr1}>
+  terminals: <System: alphabet: {void, s(), zero, cons(,)}>
   rules:
     qr0 -> [void, cons(qr1,qr0)]
     qr1 -> [s(qr1), zero]
@@ -73,8 +73,8 @@ EOF
     assert_equal( <<EOF, g2.reduce.to_s )
 <Grammar:
   axiom: qr0
-  non_terminals: <System: aphabet: {qr0, qr1}>
-  terminals: <System: aphabet: {void, cons(,), s(), zero}>
+  non_terminals: <System: alphabet: {qr0, qr1}>
+  terminals: <System: alphabet: {void, cons(,), s(), zero}>
   rules:
     qr0 -> [void, cons(qr1,qr0)]
     qr1 -> [s(qr1), zero]

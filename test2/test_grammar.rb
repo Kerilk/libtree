@@ -58,8 +58,8 @@ class TestGrammar < Minitest::Test
     assert_equal( <<EOF, @g.to_s )
 <Grammar:
   axiom: list
-  non_terminals: <System: aphabet: {list, nat}>
-  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  non_terminals: <System: alphabet: {list, nat}>
+  terminals: <System: alphabet: {zero, void, s(), cons(,)}>
   rules:
     list -> [void, cons(nat,list)]
     nat -> [zero, s(nat)]
@@ -74,8 +74,8 @@ EOF
     assert_equal( <<EOF, @rg.to_s )
 <Grammar:
   axiom: list
-  non_terminals: <System: aphabet: {list, nat}>
-  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  non_terminals: <System: alphabet: {list, nat}>
+  terminals: <System: alphabet: {zero, void, s(), cons(,)}>
   rules:
     list -> [void, cons(nat,list)]
     nat -> [zero, s(nat)]
@@ -90,8 +90,8 @@ EOF
     assert_equal( <<EOF, @rg.reduce.to_s )
 <Grammar:
   axiom: list
-  non_terminals: <System: aphabet: {list, nat}>
-  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  non_terminals: <System: alphabet: {list, nat}>
+  terminals: <System: alphabet: {zero, void, s(), cons(,)}>
   rules:
     list -> [void, cons(nat,list)]
     nat -> [zero, s(nat)]
@@ -100,8 +100,8 @@ EOF
     assert_equal( <<EOF, @rg.normalize.to_s )
 <Grammar:
   axiom: list
-  non_terminals: <System: aphabet: {list, nat}>
-  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  non_terminals: <System: alphabet: {list, nat}>
+  terminals: <System: alphabet: {zero, void, s(), cons(,)}>
   rules:
     list -> [void, cons(nat,list)]
     nat -> [zero, s(nat)]
@@ -110,8 +110,8 @@ EOF
     assert_equal( <<EOF, @rg.dup.rename_non_terminals.to_s )
 <Grammar:
   axiom: nt_0
-  non_terminals: <System: aphabet: {nt_0, nt_1}>
-  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  non_terminals: <System: alphabet: {nt_0, nt_1}>
+  terminals: <System: alphabet: {zero, void, s(), cons(,)}>
   rules:
     nt_0 -> [void, cons(nt_1,nt_0)]
     nt_1 -> [zero, s(nt_1)]
@@ -123,8 +123,8 @@ EOF
     assert_equal( <<EOF, rg2.reduce.to_s )
 <Grammar:
   axiom: nat
-  non_terminals: <System: aphabet: {nat}>
-  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  non_terminals: <System: alphabet: {nat}>
+  terminals: <System: alphabet: {zero, void, s(), cons(,)}>
   rules:
     nat -> [zero, s(nat)]
 >
@@ -133,8 +133,8 @@ EOF
     assert_equal( <<EOF, @rg2.to_s )
 <Grammar:
   axiom: list
-  non_terminals: <System: aphabet: {list, nat}>
-  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  non_terminals: <System: alphabet: {list, nat}>
+  terminals: <System: alphabet: {zero, void, s(), cons(,)}>
   rules:
     list -> [void, cons(nat,list), cons(nat,cons(nat,list))]
     nat -> [zero, s(nat)]
@@ -145,8 +145,8 @@ EOF
     assert_equal( <<EOF, @rg2.reduce.to_s )
 <Grammar:
   axiom: list
-  non_terminals: <System: aphabet: {list, nat}>
-  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  non_terminals: <System: alphabet: {list, nat}>
+  terminals: <System: alphabet: {zero, void, s(), cons(,)}>
   rules:
     list -> [void, cons(nat,list), cons(nat,cons(nat,list))]
     nat -> [zero, s(nat)]
@@ -156,8 +156,8 @@ EOF
     assert_equal( <<EOF, @rg2.normalize.to_s )
 <Grammar:
   axiom: list
-  non_terminals: <System: aphabet: {list, nat, new_nt_0}>
-  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  non_terminals: <System: alphabet: {list, nat, new_nt_0}>
+  terminals: <System: alphabet: {zero, void, s(), cons(,)}>
   rules:
     list -> [void, cons(nat,list), cons(nat,new_nt_0)]
     new_nt_0 -> cons(nat,list)
@@ -167,8 +167,8 @@ EOF
    assert_equal( <<EOF, @rg2.to_s )
 <Grammar:
   axiom: list
-  non_terminals: <System: aphabet: {list, nat}>
-  terminals: <System: aphabet: {zero, void, s(), cons(,)}>
+  non_terminals: <System: alphabet: {list, nat}>
+  terminals: <System: alphabet: {zero, void, s(), cons(,)}>
   rules:
     list -> [void, cons(nat,list), cons(nat,cons(nat,list))]
     nat -> [zero, s(nat)]
@@ -188,7 +188,7 @@ EOF
   def test_grammar_top_down_automaton
       assert_equal( <<EOF, @rg.top_down_automaton.to_s )
 <Automaton:
-  system: <System: aphabet: {zero, void, s(), cons(,)}>
+  system: <System: alphabet: {zero, void, s(), cons(,)}>
   states: {list, nat}
   initial_states: {list}
   order: pre
@@ -208,7 +208,7 @@ EOF
 
     assert_equal( <<EOF, @rg2.top_down_automaton.to_s )
 <Automaton:
-  system: <System: aphabet: {zero, void, s(), cons(,)}>
+  system: <System: alphabet: {zero, void, s(), cons(,)}>
   states: {list, nat, new_nt_0}
   initial_states: {list}
   order: pre
@@ -231,7 +231,7 @@ EOF
   def test_grammar_bottom_up_automaton
     assert_equal( <<EOF, @rg.bottom_up_automaton.to_s )
 <Automaton:
-  system: <System: aphabet: {zero, void, s(), cons(,)}>
+  system: <System: alphabet: {zero, void, s(), cons(,)}>
   states: {list, nat}
   final_states: {list}
   order: post
@@ -250,7 +250,7 @@ EOF
 
     assert_equal( <<EOF, @rg2.bottom_up_automaton.to_s )
 <Automaton:
-  system: <System: aphabet: {zero, void, s(), cons(,)}>
+  system: <System: alphabet: {zero, void, s(), cons(,)}>
   states: {list, nat, new_nt_0}
   final_states: {list}
   order: post
