@@ -39,44 +39,7 @@ module LibTree
     end
 
     def to_grammar
-      if @re.kind_of?(Term)
-        counter = 0
-        alphabet = {}
-        nt_alphabet = {}
-        rules = Grammar::RuleSet::new
-        new_re = re.dup
-        capture_group = {}
-        new_re.children.each_with_index { |c, i|
-          if c.kind_of?(Capture)
-            capture_group[i] = c.capture_name
-          end
-        }
-        new_re.each(:pre) { |t|
-          t.children.collect! { |c|
-            if c.kind_of?(RegularExpression)
-              g = c.to_grammar.rename_non_terminals("nt_#{counter}")
-              counter += 1
-              alphabet.merge!(g.terminals.alphabet)
-              nt_alphabet.merge!(g.non_terminals.alphabet)
-              g.rules.each_rule { |k, p|
-                rules.append(k, p)
-              }
-              g.axiom
-            else
-              c
-            end
-          }
-          alphabet[t.symbol] = t.arity unless nt_alphabet[t.symbol]
-        }
-        terminals = LibTree::define_system( alphabet: alphabet )
-        nt_alphabet[:base_nt0] = 0
-        non_terminals = LibTree::define_system( alphabet: nt_alphabet )
-        axiom = non_terminals.base_nt0
-        rules.append(axiom, new_re, capture_group)
-        return RegularGrammar::new(axiom: axiom, non_terminals: non_terminals, terminals: terminals, rules: rules).normalize!.rename_non_terminals
-      else
-        return re.to_grammar
-      end
+      return re.to_grammar
     end
 
   end
@@ -86,7 +49,6 @@ module LibTree
     def initialize(re, re2)
       super( re )
       @re2 = re2
-      @re2 = RegularExpression::new(@re2) if @re2.kind_of?(Term)
     end
 
     def to_grammar
@@ -102,11 +64,11 @@ module LibTree
       axiom = gre.axiom
       axiom2 = gre2.axiom
       new_axiom = Term::new(:new_axiom)
-      gre.rules.each_rule { |k, p|
-        rules.append(k, p)
+      gre.rules.each_rule { |k, p, c|
+        rules.append(k, p, c)
       }
-      gre2.rules.each_rule { |k, p|
-        rules.append(k, p)
+      gre2.rules.each_rule { |k, p, c|
+        rules.append(k, p, c)
       }
       rules.append(new_axiom, axiom)
       rules.append(new_axiom, axiom2)
@@ -134,8 +96,8 @@ module LibTree
         rules = Grammar::RuleSet::new
         axiom = gre.axiom
         s = non_terminals.substitution(rules: { variable => axiom })
-        gre.rules.each_rule { |k, p|
-          rules.append(k, p * s)
+        gre.rules.each_rule { |k, p, c|
+          rules.append(k, p * s, c)
         }
         rules.append(axiom.dup, variable)
         return RegularGrammar::new(axiom: axiom, non_terminals: non_terminals, terminals: terminals, rules: rules).normalize!
@@ -173,11 +135,11 @@ module LibTree
       axiom = gre.axiom
       axiom2 = gre2.axiom
       s = non_terminals.substitution(rules: { variable => axiom2 })
-      gre.rules.each_rule { |k, p|
-        rules.append(k, p*s)
+      gre.rules.each_rule { |k, p, c|
+        rules.append(k, p*s, c)
       }
-      gre2.rules.each_rule { |k, p|
-        rules.append(k, p)
+      gre2.rules.each_rule { |k, p, c|
+        rules.append(k, p, c)
       }
       alphabet = gre.terminals.alphabet.to_a.uniq.to_h
       alphabet.delete( variable.symbol )
@@ -199,21 +161,44 @@ module LibTree
   end
 
   class Term
+    include RegularExpression::Arithmetic
 
-    def **(*args, &block)
-      RegularExpression::new(self).**(*args, &block)
-    end
-
-    def /(*args, &block)
-      RegularExpression::new(self)./(*args, &block)
-    end
-
-    def +(*args, &block)
-      RegularExpression::new(self).+(*args, &block)
-    end
-
-    def >>(*args, &block)
-      RegularExpression::new(self).>>(*args, &block)
+    def to_grammar
+      counter = 0
+      alphabet = {}
+      nt_alphabet = {}
+      rules = Grammar::RuleSet::new
+      new_re = self.dup
+      capture_group = {}
+      new_re.children.each_with_index { |c, i|
+        if c.kind_of?(Capture)
+          capture_group[i] = c.capture_name
+          new_re.children[i] = c.re
+        end
+      }
+      new_re.each(:pre) { |t|
+        t.children.collect! { |c|
+          if c.kind_of?(RegularExpression)
+            g = c.to_grammar.rename_non_terminals("nt_#{counter}")
+            counter += 1
+            alphabet.merge!(g.terminals.alphabet)
+            nt_alphabet.merge!(g.non_terminals.alphabet)
+            g.rules.each_rule { |k, p, c|
+              rules.append(k, p, c)
+            }
+            g.axiom
+          else
+            c
+          end
+        }
+        alphabet[t.symbol] = t.arity unless nt_alphabet[t.symbol]
+      }
+      terminals = LibTree::define_system( alphabet: alphabet )
+      nt_alphabet[:base_nt0] = 0
+      non_terminals = LibTree::define_system( alphabet: nt_alphabet )
+      axiom = non_terminals.base_nt0
+      rules.append(axiom, new_re, capture_group != {} ? capture_group : nil )
+      return RegularGrammar::new(axiom: axiom, non_terminals: non_terminals, terminals: terminals, rules: rules).normalize!.rename_non_terminals
     end
 
   end
